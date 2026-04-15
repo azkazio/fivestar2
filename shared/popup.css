@@ -1,0 +1,50 @@
+/* shared/popup.css */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100dvh;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+.modal-content {
+    background: white;
+    width: 85%;
+    max-width: 380px;
+    border-radius: 28px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    animation: popupScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popupScale {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.emoji-wave { font-size: 50px; display: block; margin-bottom: 10px; }
+.modal-body h2 { color: #2563eb; margin-bottom: 8px; }
+.modal-body p { color: #64748b; font-size: 14px; margin-bottom: 15px; }
+
+.feature-list {
+    text-align: left;
+    list-style: none;
+    background: #f1f5f9;
+    padding: 15px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #475569;
+}
+
+.hidden {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
