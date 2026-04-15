@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Smart PWA</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="stylesheet" href="css/style.css"> </head>
+<body class="welcome-page">
+
+    <nav class="navbar">
+        <div class="status-indicator">
+            <span id="home-status-badge" class="badge checking">● Online</span>
+        </div>
+        <button id="logout-btn" class="btn-outline">Keluar</button>
+    </nav>
+
+    <main class="content-container">
+        <div class="welcome-card">
+            <h1>Halo, <span id="display-name">User</span>! 👋</h1>
+            <p>Selamat datang di dashboard aplikasi cerdas Anda.</p>
+            
+            <div class="features-grid">
+                <div class="feature-item">
+                    <span>📱</span>
+                    <h4>Ready Offline</h4>
+                    <p>Aplikasi ini tetap bisa diakses tanpa internet.</p>
+                </div>
+                <div class="feature-item">
+                    <span>💾</span>
+                    <h4>Smart Cache</h4>
+                    <p>Data aset Anda dikelola secara otomatis.</p>
+                </div>
+                <div class="feature-item">
+                    <span>🔒</span>
+                    <h4>Session Secured</h4>
+                    <p>Sesi Anda aktif di tab ini.</p>
+                </div>
+            </div>
+
+            <button class="primary-btn">Mulai Jelajah</button>
+        </div>
+    </main>
+
+    <script src="js/home.js"></script>
+</body>
+</html>
