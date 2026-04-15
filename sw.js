@@ -1,47 +1,39 @@
-const CACHE_NAME = 'v1_smart_cache';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'smart-pwa-v1.0.0';
+const ASSETS = [
     './',
     './index.html',
-    './css/style.css',
-    './js/app.js',
-    './manifest.json'
+    './manifest.json',
+    './shared/global.css',
+    './shared/auth-check.js',
+    './modules/login/login.html',
+    './modules/login/login.css',
+    './modules/login/login.js',
+    './modules/dashboard/dashboard.html',
+    './modules/dashboard/dashboard.css',
+    './modules/dashboard/dashboard.js'
 ];
 
-// Install & Cache Assets
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
-        })
-    );
+// Install: Simpan semua aset ke cache
+self.addEventListener('install', (e) => {
+    e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
 });
 
-// Smart Cache Management (Hapus cache lama saat update)
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys.map((key) => {
-                    if (key !== CACHE_NAME) {
-                        return caches.delete(key);
-                    }
-                })
-            );
-        })
-    );
+// Activate: Smart Cache Management (Hapus cache lama)
+self.addEventListener('activate', (e) => {
+    e.waitUntil(caches.keys().then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+    )));
 });
 
-// Offline Mode: Stale-while-revalidate
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            const fetchPromise = fetch(event.request).then((networkResponse) => {
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, networkResponse.clone());
-                });
-                return networkResponse;
-            });
-            return cachedResponse || fetchPromise;
+// Fetch: Offline Mode Strategy (Stale-While-Revalidate)
+self.addEventListener('fetch', (e) => {
+    e.respondWith(
+        caches.match(e.request).then(cached => {
+            const networked = fetch(e.request).then(res => {
+                caches.open(CACHE_NAME).then(c => c.put(e.request, res.clone()));
+                return res;
+            }).catch(() => cached);
+            return cached || networked;
         })
     );
 });
