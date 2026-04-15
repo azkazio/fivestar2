@@ -1,43 +1,9 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Member Login - Five Star 2</title>
-    <link rel="stylesheet" href="/fivestar2/shared/global.css">
-    <link rel="stylesheet" href="/fivestar2/modules/login_register/style.css">
-</head>
-<body>
+<div class="card">
+  <h2>Login</h2>
 
-    <div class="login-wrapper">
-        <div class="login-card">
-            <div class="avatar-circle">
-                <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="User Icon">
-            </div>
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
 
-            <h2>Member Login</h2>
-
-            <form id="login-form">
-                <div class="input-group">
-                    <input type="text" id="username" placeholder="Username" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="password" placeholder="Password" required>
-                </div>
-                <button type="button" id="do-login" class="btn-signin">Sign in</button>
-            </form>
-
-            <div class="footer-links">
-                <label><input type="checkbox"> Remember me</label>
-                <a href="#" style="text-decoration:none; color:#888;">Forgot Password?</a>
-            </div>
-        </div>
-
-        <div class="signup-link">
-            Don't have an account? <a href="register.html">Sign up here!</a>
-        </div>
-    </div>
-
-    <script src="/fivestar2/modules/login_register/script.js"></script>
-</body>
-</html>
+  <button onclick="login()">Login</button>
+  <button onclick="go('modules/login_register/register.html')">Register</button>
+</div>
