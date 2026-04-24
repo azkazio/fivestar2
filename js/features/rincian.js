@@ -102,7 +102,7 @@ function bukaMenuRincian(event) {
                     </div>
                 </div>
                 <div class="ios-modal-footer-grid" style="grid-template-columns: 1fr; flex-shrink: 0;">
-                    <button onclick="tutupMenuRincian()" style="width: 100%; padding: 15px; background: transparent; border: none; color: #007AFF; font-size: 17px; font-weight: 600; cursor: pointer;">Tutup</button>
+                    <button onclick="tutupMenuRincian()" style="width: 100%; padding: 15px; background: transparent; border: none; color: #007AFF; font-size: 17px; font-weight: 600; cursor: pointer;">Siap</button>
                 </div>
             </div>
         `;
