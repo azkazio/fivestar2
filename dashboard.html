@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard FIVE STAR 2</title>
     
+    <meta name="theme-color" content="#007AFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/main.css">
     
@@ -74,11 +80,14 @@
     </div>
         
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+
     
     <script src="js/core/firebase.js"></script>
     <script src="js/core/main.js"></script>
+    
     <script src="js/user/profil.js"></script>
     <script src="js/user/pengaturan.js"></script>
     <script src="js/features/absen.js"></script>
@@ -88,5 +97,122 @@
     <script src="js/features/rincian.js"></script>
     <script src="js/features/gaji.js"></script>
     <script src="js/features/edit-data.js"></script>
+
+    <script>
+    window.antrianAbsenBolong = [];
+
+    // --- 1. SECURITY GUARD ---
+    firebase.auth().onAuthStateChanged(async function(user) {
+        if (user) {
+            console.log("Sesi Aktif: " + user.email);
+            if (typeof refreshDataProfilUI === 'function') refreshDataProfilUI();
+            await jalankanPolisiAbsen(user);
+        } else {
+            window.location.href = "login.html"; 
+        }
+    });
+
+    // --- 2. PATROLI POLISI ABSEN ---
+    async function jalankanPolisiAbsen(user) {
+        const tglDaftar = new Date(user.metadata.creationTime);
+        tglDaftar.setHours(0, 0, 0, 0);
+
+        console.log("Polisi Absen: Memulai patroli...");
+        const listPromises = [];
+        const daftarTglLengkap = [];
+        const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+
+        // Diubah menjadi i >= 1 agar tidak menagih absen "Hari Ini" saat baru buka aplikasi pagi hari
+        for (let i = 7; i >= 1; i--) {
+            let d = new Date();
+            d.setDate(d.getDate() - i);
+            d.setHours(0, 0, 0, 0);
+
+            if (d < tglDaftar) continue;
+
+            const tglFullStr = d.toLocaleDateString('id-ID', opsi); 
+            const temp = tglFullStr.split(', ');
+            const parts = temp[1].split(" ");
+            
+            const blnTahunId = parts[1] + "_" + parts[2]; 
+            const dateId = tglFullStr.replace(', ', '_').replace(/\s/g, '_'); 
+
+            daftarTglLengkap.push(tglFullStr);
+
+            const p = window.firestore.collection('data').doc(user.uid)
+                        .collection('absen').doc(blnTahunId)
+                        .collection(dateId).doc('harian').get();
+            listPromises.push(p);
+        }
+
+        if (listPromises.length === 0) return;
+
+        try {
+            const snapshots = await Promise.all(listPromises);
+            window.antrianAbsenBolong = [];
+
+            snapshots.forEach((doc, index) => {
+                if (!doc.exists) { 
+                    window.antrianAbsenBolong.push(daftarTglLengkap[index]); 
+                }
+            });
+
+            if (window.antrianAbsenBolong.length > 0) {
+                panggilModalAntrean();
+            }
+        } catch (e) { console.error("Polisi Gagal Patroli:", e); }
+    }
+
+    function panggilModalAntrean() {
+        if (window.antrianAbsenBolong.length > 0) {
+            const tglTarget = window.antrianAbsenBolong[0];
+            if (typeof window.bukaMenuAbsen === 'function') {
+                window.bukaMenuAbsen(null, tglTarget, null, true); 
+            }
+        }
+    }
+
+    function aturNantiSemua() {
+        window.antrianAbsenBolong = []; 
+        const modal = document.getElementById('absenModal'); 
+        if (modal) modal.style.display = 'none'; 
+        
+        if (typeof IOSAlert !== 'undefined') {
+            IOSAlert.show("Peringatan", "Absenmu masih ada yang bolong. Jangan lupa dilengkapi nanti ya!");
+        }
+    }
+
+    // --- 3. REGISTER SERVICE WORKER (PWA) ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                // Pantau jika ada update
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            if (typeof IOSAlert !== 'undefined') {
+                                IOSAlert.show("Update Tersedia", "Versi terbaru FIVE STAR 2 siap digunakan.", {
+                                    teksTombol: "Segarkan",
+                                    onConfirm: () => {
+                                        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+            }).catch(err => console.log('PWA Error:', err));
+        });
+
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+            }
+        });
+    }
+    </script>
 </body>
 </html>
