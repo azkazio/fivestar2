@@ -489,8 +489,11 @@ body.dark-theme .ios-modal-footer-grid button:active { background: rgba(255,255,
     color: #FF3B30;
 }
 
+// Tambahkan jika belum ada di bagian injeksi style CSS
 .tgl-item-global.today {
-    box-shadow: inset 0 0 0 2px #007AFF;
+    border: 2px solid #007AFF !important; /* Warna biru khas iOS */
+    color: #007AFF;
+    font-weight: bold;
 }
 
 .tgl-item-global.selected {
