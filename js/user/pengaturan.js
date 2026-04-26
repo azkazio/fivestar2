@@ -58,7 +58,6 @@ function bukaPengaturan() {
 function tutupPengaturan() {
     document.getElementById('pengaturanModal').style.display = 'none';
     
-    // Sinkronisasi ke Header (main.js) dan UI Profil (profil.js)
     if (typeof muatDataHeader === 'function') muatDataHeader(); 
     if (typeof refreshDataProfilUI === 'function') refreshDataProfilUI();
     if (typeof muatDataUserLokal === 'function') muatDataUserLokal();
@@ -82,30 +81,114 @@ function gantiLayar(judul, htmlKonten, htmlFooter) {
 
 const listStyle = "display: flex; justify-content: space-between; align-items: center; padding: 16px 15px; border-bottom: 1px solid rgba(142,142,147,0.2); cursor: pointer; color: var(--text-primary); font-size: 15px; font-weight: 500;";
 const listStyleLast = "display: flex; justify-content: space-between; align-items: center; padding: 16px 15px; cursor: pointer; color: var(--text-primary); font-size: 15px; font-weight: 500;";
-const iconStyle = "color: #8E8E93; font-size: 14px;";
+const iconStyle = "color: #C4C4C6; font-size: 14px;"; // Warna panah standar iOS abu-abu terang
 
-// --- 3. MENU RENDERING ---
+// --- 3. MENU RENDERING (UI PREMIUM + MENU INFORMASI) ---
 
 function renderMenuPengaturan() {
     const htmlKonten = `
         <div class="list-group-ios">
             <div onclick="renderSubMenuAkun()" style="${listStyle}">
-                <span>Pengaturan Akun</span> <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 28px; height: 28px; background: #007AFF; border-radius: 7px; display: flex; justify-content: center; align-items: center; color: white;"><i class="fa-solid fa-user-shield"></i></div>
+                    <span>Pengaturan Akun</span>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
             </div>
+            
             <div onclick="renderDataDiri()" style="${listStyle}">
-                <span>Data Diri Lengkap</span> <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 28px; height: 28px; background: #34C759; border-radius: 7px; display: flex; justify-content: center; align-items: center; color: white;"><i class="fa-solid fa-id-card"></i></div>
+                    <span>Data Diri Lengkap</span>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
             </div>
-            <div onclick="renderTema()" style="${listStyleLast}">
-                <span>Mode Tema</span> <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
+            
+            <div onclick="renderTema()" style="${listStyle}">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 28px; height: 28px; background: #5856D6; border-radius: 7px; display: flex; justify-content: center; align-items: center; color: white;"><i class="fa-solid fa-moon"></i></div>
+                    <span>Mode Tema</span>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
+            </div>
+
+            <div onclick="renderInformasiAplikasi()" style="${listStyleLast}">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 28px; height: 28px; background: #8E8E93; border-radius: 7px; display: flex; justify-content: center; align-items: center; color: white;"><i class="fa-solid fa-circle-info"></i></div>
+                    <span>Informasi Aplikasi</span>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
             </div>
         </div>
+        
         <button onclick="prosesLogout()" style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,59,48,0.1); color: #FF3B30; border: 1px solid rgba(255,59,48,0.2); font-weight: 600; font-size: 16px; cursor: pointer;">Keluar dari Aplikasi</button>
     `;
     const htmlFooter = `<button class="btn-batal btn-footer-center" onclick="tutupPengaturan()">Tutup</button>`;
     gantiLayar('Pengaturan', htmlKonten, htmlFooter);
 }
 
-// --- 4. SUB MENU: AKUN (UID ROOT) ---
+// --- MENU BARU: LOGIKA INFORMASI APLIKASI & AUTO-VERSION ---
+
+function renderInformasiAplikasi() {
+    const htmlKonten = `
+        <div style="text-align: center; padding: 10px 0 20px;">
+            <div style="width: 80px; height: 80px; border-radius: 18px; overflow: hidden; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: white;">
+                <img src="assets/icon-192.png" alt="Logo FIVE STAR 2" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            
+            <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--text-primary);">FIVE STAR 2</h2>
+            <p id="teksVersiApp" style="font-size: 13px; color: #8E8E93; margin-top: 4px;">Memuat versi sistem...</p>
+        </div>
+
+        <div class="list-group-ios" style="margin-top: 10px; font-size: 14px;">
+            <div style="display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid rgba(142,142,147,0.2);">
+                <span style="color: #8E8E93;">Pengembang</span>
+                <span style="font-weight: 600; color: var(--text-primary);">RONNY</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid rgba(142,142,147,0.2);">
+                <span style="color: #8E8E93;">Media Storage</span>
+                <span style="font-weight: 600; color: var(--text-primary);">Firebase</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 12px 15px;">
+                <span style="color: #8E8E93;">Sistem Basis Data</span>
+                <span style="font-weight: 600; color: #34C759;">Terhubung</span>
+            </div>
+        </div>
+        <p style="text-align: center; font-size: 11px; color: #C4C4C6; margin-top: 15px;">&copy; 2026 FIVE STAR Management. Hak Cipta Dilindungi.</p>
+    `;
+    
+    const htmlFooter = `<button class="btn-batal btn-footer-center" onclick="renderMenuPengaturan()">Kembali</button>`;
+    gantiLayar('Informasi Aplikasi', htmlKonten, htmlFooter);
+
+    // Panggil fungsi untuk membaca file sw.js setelah layar dirender
+    bacaVersiDariSW();
+}
+
+// Fungsi untuk mengintip versi di dalam file sw.js
+function bacaVersiDariSW() {
+    fetch('/sw.js')
+        .then(response => response.text())
+        .then(text => {
+            // Mencari teks "const VERSION = 'v...'" di dalam file sw.js
+            const match = text.match(/const VERSION\s*=\s*['"]([^'"]+)['"]/);
+            const elemenVersi = document.getElementById('teksVersiApp');
+            
+            if (match && elemenVersi) {
+                // Jika ketemu, tampilkan versinya
+                elemenVersi.innerText = 'Versi ' + match[1];
+            } else if (elemenVersi) {
+                // Jika tidak ketemu formatnya, pakai default
+                elemenVersi.innerText = ' ';
+            }
+        })
+        .catch(err => {
+            // Jika gagal memuat (misal sedang offline total)
+            const elemenVersi = document.getElementById('teksVersiApp');
+            if (elemenVersi) elemenVersi.innerText = 'Versi Offline';
+        });
+}
+
+// --- 4. SUB MENU: AKUN (TIDAK DIUBAH LOGIKANYA) ---
 
 async function renderSubMenuAkun() {
     const userAuth = firebase.auth().currentUser;
@@ -205,7 +288,7 @@ async function simpanEmailBaru() {
     }
 }
 
-// --- 6. DATA DIRI LENGKAP & NOTIFIKASI SIMPAN ---
+// --- 6. DATA DIRI LENGKAP ---
 
 async function renderDataDiri() {
     const userAuth = firebase.auth().currentUser;
@@ -259,7 +342,6 @@ async function simpanDataDiri() {
     const userAuth = firebase.auth().currentUser;
     const btnSimpan = document.getElementById('btnSimpanData');
     
-    // Ubah teks sementara
     if (btnSimpan) btnSimpan.innerText = "Menyimpan...";
 
     const updateData = {
@@ -275,7 +357,6 @@ async function simpanDataDiri() {
         await window.db.ref(userAuth.uid).update(updateData);
         localStorage.setItem('nama_user', updateData.nama);
         
-        // Peringatan Berhasil Menggunakan IOSAlert
         if (typeof IOSAlert !== 'undefined') {
             IOSAlert.show("Pembaruan Berhasil", "Data diri Anda telah sukses disimpan ke sistem.", { 
                 teksTombol: "Oke",
@@ -293,7 +374,7 @@ async function simpanDataDiri() {
     }
 }
 
-// --- 7. LOGIKA PASSWORD (CHECKLIST) ---
+// --- 7. LOGIKA PASSWORD ---
 
 function renderPengaturanPassword(judul) {
     const isUbah = judul === 'Ubah Kata Sandi';
@@ -418,27 +499,18 @@ async function prosesHapusAkun() {
     const btn = document.getElementById('btnEksekusiHapus');
 
     if (!userAuth) return;
-    
-    // Cek apakah kolom password diisi
-    if (!passInput) {
-        return IOSAlert.show("Peringatan", "Harap masukkan kata sandi Anda untuk keamanan.");
-    }
+    if (!passInput) return IOSAlert.show("Peringatan", "Harap masukkan kata sandi Anda untuk keamanan.");
 
     btn.innerText = "Menghapus...";
     btn.disabled = true;
 
     try {
-        // 1. RE-AUTHENTICATE (Refresh Sesi Login agar Firebase memberi izin hapus)
         const credential = firebase.auth.EmailAuthProvider.credential(userAuth.email, passInput);
         await userAuth.reauthenticateWithCredential(credential);
 
-        // 2. Karena sesi sudah fresh & password benar, hapus data Database
         await window.db.ref(userAuth.uid).remove();
-
-        // 3. Hapus akun dari Authentication
         await userAuth.delete();
 
-        // 4. Bersihkan memori HP lokal dan kembali ke depan
         localStorage.clear(); 
         window.location.replace('index.html');
 
@@ -446,7 +518,6 @@ async function prosesHapusAkun() {
         btn.innerText = "Hapus";
         btn.disabled = false;
         
-        // Tangkap pesan error jika sandi salah
         if (e.code === 'auth/wrong-password') {
             IOSAlert.show("Gagal", "Kata sandi yang Anda masukkan salah.");
         } else if (e.code === 'auth/too-many-requests') {

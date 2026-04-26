@@ -313,11 +313,11 @@ function terapkanCrop() {
     const cropY = (selector.offsetTop - rect.top) * scaleY;
     const cropSize = selector.offsetWidth * scaleX;
 
-    canvas.width = 1080; canvas.height = 1080;
+    canvas.width = 500; canvas.height = 500;
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(tempCanvas, cropX, cropY, cropSize, cropSize, 0, 0, 1080, 1080);
+    ctx.drawImage(tempCanvas, cropX, cropY, cropSize, cropSize, 0, 0, 500, 500);
 
-    const base64 = canvas.toDataURL('image/jpeg', 1.0);
+    const base64 = canvas.toDataURL('image/jpeg', 0.7);
     
     // 1. UPDATE POPUP PROFIL
     document.getElementById('fotoProfilUtama').src = base64;
