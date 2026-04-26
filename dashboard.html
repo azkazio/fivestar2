@@ -122,13 +122,28 @@
         const daftarTglLengkap = [];
         const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
 
-        // Diubah menjadi i >= 1 agar tidak menagih absen "Hari Ini" saat baru buka aplikasi pagi hari
-        for (let i = 7; i >= 1; i--) {
+        const waktuSekarang = new Date(); // Ambil waktu aktual saat ini
+
+        // Diubah menjadi i >= 0 agar mengecek "Hari Ini", tetapi dengan logika jam 09:30
+        for (let i = 7; i >= 0; i--) {
             let d = new Date();
             d.setDate(d.getDate() - i);
             d.setHours(0, 0, 0, 0);
 
             if (d < tglDaftar) continue;
+
+            // --- LOGIKA TENGGAT WAKTU 09.30 UNTUK HARI INI ---
+            if (i === 0) { 
+                const jam = waktuSekarang.getHours();
+                const menit = waktuSekarang.getMinutes();
+                
+                // Jika masih di bawah jam 09:30, LEWATI (jangan tagih absen hari ini)
+                if (jam < 9 || (jam === 9 && menit < 30)) {
+                    console.log("Polisi Absen: Aman, hari ini belum jam 09.30.");
+                    continue; 
+                }
+            }
+            // -------------------------------------------------
 
             const tglFullStr = d.toLocaleDateString('id-ID', opsi); 
             const temp = tglFullStr.split(', ');
