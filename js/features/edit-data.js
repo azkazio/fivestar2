@@ -58,7 +58,7 @@ function bukaMenuEdit(event) {
                             <i class="fa-solid fa-magnifying-glass"></i> Cari Data
                         </button>
                     </div>
-                    <div id="areaListEdit" style="padding-top: 15px;"></div>
+                    <div id="areaListEdit" style="padding: 6px; overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch;"></div>
                 </div>
                 <div class="ios-modal-footer-grid" style="flex-shrink: 0; grid-template-columns: 1fr; border-top: 0.5px solid rgba(142,142,147,0.2);">
                     <button class="btn-batal" onclick="tutupMenuEdit()" style="width: 100%; border: none; font-weight: 700; color: #007AFF !important; padding: 16px; background: transparent; font-size: 17px;">Tutup</button>
