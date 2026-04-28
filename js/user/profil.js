@@ -1,4 +1,4 @@
-// profil.js - VERSI FINAL (Center Popup Zoom, Fixed Skeleton Size, No Blink)
+// profil.js - VERSI FINAL (Center Popup Zoom, Fixed Skeleton Size, Centered Text Fix)
 // Dikembangkan oleh: RONNY (2026)
 
 let tempImg = null;
@@ -37,6 +37,7 @@ if (!document.getElementById('profil-custom-style')) {
             text-overflow: ellipsis;
             width: 100%;
             display: block;
+            box-sizing: border-box; /* FIX UTAMA: Kunci padding agar text benar-benar center */
         }
         .profil-banner-bg {
             height: 110px;
@@ -202,7 +203,6 @@ function bukaPopupProfil(event) {
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'profileIosModal';
-        // Dibuat align center agar muncul di tengah, bukan nempel di bawah
         modal.className = 'ios-overlay'; 
         modal.style.cssText = 'z-index: 21000; align-items: center; justify-content: center;';
         
@@ -222,7 +222,7 @@ function bukaPopupProfil(event) {
                     </div>
                     
                     <h3 id="displayNamaProfil" class="text-ellipsis-profil" style="color: var(--text-primary); margin: 12px 0 2px 0; text-align: center; font-size: 19px; font-weight: 800; padding: 0 15px;">Memuat...</h3>
-                    <p id="displayUserSubLokal" style="text-align: center; margin: 0 0 15px 0; color: #8E8E93; font-size: 13px; font-weight: 500;">@user</p>
+                    <p id="displayUserSubLokal" class="text-ellipsis-profil" style="text-align: center; margin: 0 0 15px 0; color: #8E8E93; font-size: 13px; font-weight: 500; padding: 0 15px;">@user</p>
 
                     <div style="background: rgba(142,142,147,0.05); border-radius: 16px; margin: 0 15px; border: 1px solid rgba(142,142,147,0.12); text-align: left; display: flex; flex-direction: column;">
                         
@@ -230,7 +230,7 @@ function bukaPopupProfil(event) {
                             <div style="width:28px; height:28px; border-radius:7px; background:#007AFF; display:flex; justify-content:center; align-items:center; flex-shrink: 0;"><i class="fa-solid fa-envelope" style="color:white; font-size:12px;"></i></div>
                             <div style="display:flex; flex-direction:column; overflow:hidden; flex-grow: 1;">
                                 <span style="font-size:10px; color:#8E8E93; font-weight:700; text-transform:uppercase;">Email Akun</span>
-                                <span id="displayEmailProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600;">Memuat...</span>
+                                <span id="displayEmailProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600; padding: 0;">Memuat...</span>
                             </div>
                         </div>
                         
@@ -238,7 +238,7 @@ function bukaPopupProfil(event) {
                             <div style="width:28px; height:28px; border-radius:7px; background:#34C759; display:flex; justify-content:center; align-items:center; flex-shrink: 0;"><i class="fa-solid fa-phone" style="color:white; font-size:12px;"></i></div>
                             <div style="display:flex; flex-direction:column; overflow:hidden; flex-grow: 1;">
                                 <span style="font-size:10px; color:#8E8E93; font-weight:700; text-transform:uppercase;">Nomor Telepon</span>
-                                <span id="displayHpProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600;">Memuat...</span>
+                                <span id="displayHpProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600; padding: 0;">Memuat...</span>
                             </div>
                         </div>
                         
@@ -246,7 +246,7 @@ function bukaPopupProfil(event) {
                             <div style="width:28px; height:28px; border-radius:7px; background:#5856D6; display:flex; justify-content:center; align-items:center; flex-shrink: 0;"><i class="fa-solid fa-venus-mars" style="color:white; font-size:12px;"></i></div>
                             <div style="display:flex; flex-direction:column; overflow:hidden; flex-grow: 1;">
                                 <span style="font-size:10px; color:#8E8E93; font-weight:700; text-transform:uppercase;">Jenis Kelamin</span>
-                                <span id="displayGenderProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600;">Memuat...</span>
+                                <span id="displayGenderProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600; padding: 0;">Memuat...</span>
                             </div>
                         </div>
                         
@@ -254,7 +254,7 @@ function bukaPopupProfil(event) {
                             <div style="width:28px; height:28px; border-radius:7px; background:#FF9500; display:flex; justify-content:center; align-items:center; flex-shrink: 0;"><i class="fa-solid fa-calendar-day" style="color:white; font-size:12px;"></i></div>
                             <div style="display:flex; flex-direction:column; overflow:hidden; flex-grow: 1;">
                                 <span style="font-size:10px; color:#8E8E93; font-weight:700; text-transform:uppercase;">Usia Saat Ini</span>
-                                <span id="displayUmurProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600;">Memuat...</span>
+                                <span id="displayUmurProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600; padding: 0;">Memuat...</span>
                             </div>
                         </div>
                         
