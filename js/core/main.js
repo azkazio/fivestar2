@@ -1,5 +1,7 @@
-// main.js - FULL VERSION (Kalender Premium & iOS Picker Bebas Bentrok)
-// Letakkan di baris paling atas!
+// =============================================================================
+// main.js - FIVE STAR 2 PREMIUM CORE (ULTIMATE STACKED NAVIGATION)
+// =============================================================================
+
 window.avatarSiluet = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'%3E%3C/path%3E%3C/svg%3E";
 
 function muatFotoDashboard() {
@@ -18,19 +20,12 @@ let currentDate = new Date();
 let targetInputId = "";
 const bulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-// Ganti atau tambahkan di main.js
 function getTanggalHariIni() {
     const d = new Date();
-    const opsi = { 
-        weekday: 'long', // Menampilkan nama hari (Senin, Selasa, dst)
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
-    };
+    const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
     return d.toLocaleDateString('id-ID', opsi);
 }
 
-// Helper untuk merubah tanggal objek apapun ke format lengkap
 function formatKeTanggalLengkap(dateObj) {
     const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
     return dateObj.toLocaleDateString('id-ID', opsi);
@@ -38,17 +33,17 @@ function formatKeTanggalLengkap(dateObj) {
 
 
 // ==========================================
-// PREMIUM VISUAL KALENDER GLOBAL (Untuk kerja.js, Rincian, dll)
+// 1. PREMIUM VISUAL KALENDER GLOBAL (LEVEL 1)
 // ==========================================
 function bukaKalenderVisual(inputId) {
     targetInputId = inputId;
     let val = document.getElementById(inputId).value;
-    if (val) {
-        let parts = val.split(" ");
+    
+    if (val && val.includes(',')) {
+        let cleanDate = val.split(', ')[1]; 
+        let parts = cleanDate.split(' '); 
         if (parts.length === 3) {
-            currentDate.setDate(parseInt(parts[0]));
-            currentDate.setMonth(bulanIndo.indexOf(parts[1]));
-            currentDate.setFullYear(parseInt(parts[2]));
+            currentDate = new Date(parseInt(parts[2]), bulanIndo.indexOf(parts[1]), parseInt(parts[0]));
         }
     } else {
         currentDate = new Date(); 
@@ -59,39 +54,63 @@ function bukaKalenderVisual(inputId) {
         modal = document.createElement('div');
         modal.id = 'kalenderIosModal';
         modal.className = 'ios-overlay';
-        modal.style.zIndex = '25000';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.4); z-index: 25000;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        `;
         
         modal.innerHTML = `
-            <div class="ios-modal-form" style="width: 340px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="ios-modal-header" style="display: flex; justify-content: flex-start; align-items: center; padding: 15px 20px; flex-shrink: 0; position: relative;">
-                    <div onclick="bukaBulanTahunPickerGlobal()" style="cursor:pointer; display:flex; align-items:center; gap:5px;">
-                        <h3 id="txtDisplayBulanTahunGlobal" style="margin:0; font-size:18px;">Bulan 2026</h3>
-                        <i class="fa-solid fa-chevron-down" style="font-size:10px; opacity:0.5;"></i>
+            <div class="ios-modal-form profile-expand-anim" style="width: 360px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+                <div class="ios-modal-header" style="display: flex; justify-content: flex-start; align-items: center; padding: 18px; flex-shrink: 0;">
+                    <div onclick="bukaBulanTahunPickerGlobal()" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        <h3 id="txtDisplayBulanTahunGlobal" style="margin:0; font-size:17px; font-weight: 700; color: var(--text-primary);">
+                            ${bulanIndo[currentDate.getMonth()]} ${currentDate.getFullYear()}
+                        </h3>
+                        <i class="fa-solid fa-chevron-down" style="font-size:10px; color: var(--text-primary);"></i>
                     </div>
                 </div>
                 
-                <div class="ios-modal-body" style="padding: 0; overflow-y: auto; flex-grow: 1; border-bottom: 1px solid rgba(0,0,0,0.05);">
-                    <div class="grid-kalender-container" style="border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 5px; position: sticky; top: 0; background: inherit; z-index: 5;">
-                        <div style="color:#FF3B30; font-size:10px; font-weight:800;">MIN</div>
-                        <div style="opacity:0.5; font-size:10px; font-weight:800;">SEN</div>
-                        <div style="opacity:0.5; font-size:10px; font-weight:800;">SEL</div>
-                        <div style="opacity:0.5; font-size:10px; font-weight:800;">RAB</div>
-                        <div style="opacity:0.5; font-size:10px; font-weight:800;">KAM</div>
-                        <div style="opacity:0.5; font-size:10px; font-weight:800;">JUM</div>
-                        <div style="opacity:0.5; font-size:10px; font-weight:800;">SAB</div>
+                <div class="ios-modal-body" style="padding: 10px; overflow-y: auto; flex-grow: 1;">
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 8px; border-bottom: 0.5px solid rgba(142,142,147,0.2); margin-bottom: 10px;">
+                        <div style="color:#FF3B30; font-size:13px; font-weight:800;">MIN</div>
+                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">SEN</div>
+                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">SEL</div>
+                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">RAB</div>
+                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">KAM</div>
+                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">JUM</div>
+                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">SAB</div>
                     </div>
-                    <div id="gridBodyKalenderGlobal" class="grid-kalender-container"></div>
+                    <div id="gridBodyKalenderGlobal" class="grid-kalender-container" style="min-height: 330px; padding: 4px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 9px;"></div>
                 </div>
 
-                <div class="ios-modal-footer-grid" style="grid-template-columns: 1fr; flex-shrink: 0;">
-                    <button class="btn-batal" onclick="tutupKalenderVisual()" style="width: 100%; border: none; font-weight: bold; color: #007AFF !important; padding: 15px; text-align: center;">Batal</button>
+                <div class="ios-modal-footer" style="border-top: 0.5px solid rgba(142,142,147,0.2); flex-shrink: 0;">
+                    <button class="btn-batal" onclick="tutupKalenderVisual()" style="width: 100%; border: none; font-weight: 700; color: #007AFF !important; padding: 16px; text-align: center; background: transparent; font-size: 17px; cursor: pointer;">Batal</button>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
     }
+
     renderKalenderVisual();
     modal.style.display = 'flex';
+
+    // --- STEP NAVIGATION LOGIC (LEVEL) ---
+    const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
+    const myLvl = baseLvl + 1;
+    history.pushState({ id: 'kalenderVisual', level: myLvl }, '', '');
+
+    window.handleBackKalenderVisual = function(e) {
+        const currentLvl = e.state ? (e.state.level || 0) : 0;
+        // Jika kedalaman berkurang (user memencet back), tutup modal ini
+        if (currentLvl < myLvl) {
+            const m = document.getElementById('kalenderIosModal');
+            if (m) m.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackKalenderVisual);
+        }
+    };
+    window.addEventListener('popstate', window.handleBackKalenderVisual);
 }
 
 function renderKalenderVisual() {
@@ -108,7 +127,6 @@ function renderKalenderVisual() {
     const daysInMonth = new Date(thn, bln + 1, 0).getDate();
 
     let targetVal = document.getElementById(targetInputId)?.value || "";
-    // todayStr sekarang berisi: "Senin, 27 April 2026"
     const todayStr = getTanggalHariIni(); 
 
     for (let i = 0; i < firstDay; i++) {
@@ -116,17 +134,14 @@ function renderKalenderVisual() {
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
-        // --- PERBAIKAN: Buat format yang sama dengan todayStr ---
         const tempDate = new Date(thn, bln, d);
         const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
         const tglFullStr = tempDate.toLocaleDateString('id-ID', opsi); 
 
         const dayOfWeek = (firstDay + d - 1) % 7;
-        
         let classes = "tgl-item-global";
         if (dayOfWeek === 0) classes += " minggu"; 
         
-        // Bandingkan format yang sudah sama-sama lengkap
         if (tglFullStr === todayStr) classes += " today"; 
         if (tglFullStr === targetVal) classes += " selected"; 
 
@@ -137,15 +152,9 @@ function renderKalenderVisual() {
 function pilihTanggal(d, bln, thn) {
     const input = document.getElementById(targetInputId);
     if (input) {
-        // Buat objek tanggal dari pilihan user
         const dateObj = new Date(thn, bln, d);
-        
-        // Gunakan format lengkap (Hari, Tanggal Bulan Tahun)
         const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-        const tglCantik = dateObj.toLocaleDateString('id-ID', opsi);
-        
-        input.value = tglCantik; // Hasil: Minggu, 26 April 2026
-        
+        input.value = dateObj.toLocaleDateString('id-ID', opsi); 
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
     }
@@ -153,22 +162,45 @@ function pilihTanggal(d, bln, thn) {
 }
 
 function tutupKalenderVisual() {
-    const modal = document.getElementById('kalenderIosModal');
-    if(modal) modal.style.display = 'none';
+    if (history.state && history.state.id === 'kalenderVisual') {
+        history.back(); // Memicu popstate dengan rapi
+    } else {
+        const m = document.getElementById('kalenderIosModal');
+        if(m) m.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackKalenderVisual);
+    }
 }
 
-// --- PICKER BULAN GLOBAL ---
+
+// ==========================================
+// 2. PICKER BULAN GLOBAL (LEVEL 2)
+// ==========================================
 function bukaBulanTahunPickerGlobal() {
     let picker = document.getElementById('pickerMYGlobal');
     if (!picker) {
         picker = document.createElement('div');
         picker.id = 'pickerMYGlobal';
         picker.className = 'ios-overlay';
-        picker.style.zIndex = '26000';
+        picker.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 26000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);`;
         document.body.appendChild(picker);
     }
     renderPickerMYGlobalInner(true);
     picker.style.display = 'flex';
+
+    // --- STEP NAVIGATION LOGIC ---
+    const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
+    const myLvl = baseLvl + 1;
+    history.pushState({ id: 'pickerMYGlobal', level: myLvl }, '', '');
+
+    window.handleBackPickerMYGlobal = function(e) {
+        const currentLvl = e.state ? (e.state.level || 0) : 0;
+        if (currentLvl < myLvl) {
+            const p = document.getElementById('pickerMYGlobal');
+            if (p) p.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackPickerMYGlobal);
+        }
+    };
+    window.addEventListener('popstate', window.handleBackPickerMYGlobal);
 }
 
 function renderPickerMYGlobalInner(withAnim = false) {
@@ -177,68 +209,41 @@ function renderPickerMYGlobalInner(withAnim = false) {
     if(!picker) return;
     const animStyle = withAnim ? '' : 'animation: none !important; transition: none !important;';
     
+    // KONSISTENSI: Width 320px, Height 380px, Grid 3 kolom
     picker.innerHTML = `
-        <div class="ios-modal-form" style="width: 300px; padding: 20px; ${animStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="ios-modal-form profile-expand-anim" style="width: 320px; height: 380px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; ${animStyle}; background: var(--card-bg); border-radius: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0;">
                 <button class="btn-icon-edit" onclick="ubahThnGlobal(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                <h2 onclick="bukaYearPickerGlobal()" style="margin:0; cursor:pointer;">${thn} <i class="fa-solid fa-caret-down" style="font-size:12px;"></i></h2>
+                <h2 onclick="bukaYearPickerGlobal()" style="margin:0; cursor:pointer; color: var(--text-primary); font-size: 18px;">${thn} <i class="fa-solid fa-caret-down" style="font-size:12px;"></i></h2>
                 <button class="btn-icon-edit" onclick="ubahThnGlobal(1)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div class="grid-picker">
+            <div class="grid-picker" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex-grow: 1; align-content: center;">
                 ${bulanIndo.map((b, i) => `
                     <div class="grid-item ${currentDate.getMonth() === i ? 'active' : ''}" 
-                         onclick="setBlnGlobal(${i})" style="padding: 12px 0;">${b.substring(0,3)}</div>
+                         onclick="setBlnGlobal(${i})" style="padding: 12px 0; text-align: center; border-radius: 8px;">${b.substring(0,3)}</div>
                 `).join('')}
             </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn-text-batal" onclick="document.getElementById('pickerMYGlobal').style.display='none'">BATAL</button>
+            <div style="text-align: center; margin-top: auto; flex-shrink: 0; padding-top: 15px;">
+                <button class="btn-text-batal" onclick="tutupPickerMYGlobal()" style="width: 100%; border: none; background: transparent; color: #FF3B30; font-weight: 700; padding: 10px; font-size: 16px;">BATAL</button>
             </div>
         </div>
     `;
 }
 
-// --- PICKER TAHUN GLOBAL ---
-function bukaYearPickerGlobal() {
-    let yrPicker = document.getElementById('pickerYearOnlyGlobal');
-    if (!yrPicker) {
-        yrPicker = document.createElement('div');
-        yrPicker.id = 'pickerYearOnlyGlobal';
-        yrPicker.className = 'ios-overlay';
-        yrPicker.style.zIndex = '27000';
-        document.body.appendChild(yrPicker);
+function tutupPickerMYGlobal() {
+    if (history.state && history.state.id === 'pickerMYGlobal') {
+        history.back();
+    } else {
+        const p = document.getElementById('pickerMYGlobal');
+        if(p) p.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackPickerMYGlobal);
     }
-    renderYearPickerGlobalInner(true);
-    yrPicker.style.display = 'flex';
 }
 
-function renderYearPickerGlobalInner(withAnim = false) {
-    const startY = currentDate.getFullYear() - 4;
-    const endY = startY + 11;
-    let yearHtml = '';
-    const animStyle = withAnim ? '' : 'animation: none !important; transition: none !important;';
-
-    for (let y = startY; y <= endY; y++) {
-        yearHtml += `<div class="grid-item ${y === currentDate.getFullYear() ? 'active' : ''}" onclick="setThnGlobal(${y})" style="padding: 12px 0;">${y}</div>`;
-    }
-
-    const yrPicker = document.getElementById('pickerYearOnlyGlobal');
-    if(!yrPicker) return;
-
-    yrPicker.innerHTML = `
-        <div class="ios-modal-form" style="width: 300px; padding: 20px; ${animStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <button class="btn-icon-edit" onclick="ubahThnGlobal(-12, true)"><i class="fa-solid fa-chevron-left"></i></button>
-                <h2 style="margin:0; font-size: 18px;"> < ${startY} - ${endY} > </h2>
-                <button class="btn-icon-edit" onclick="ubahThnGlobal(12, true)"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            <div class="grid-picker">
-                ${yearHtml}
-            </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn-text-batal" onclick="document.getElementById('pickerYearOnlyGlobal').style.display='none'">BATAL</button>
-            </div>
-        </div>
-    `;
+function setBlnGlobal(i) {
+    currentDate.setMonth(i);
+    tutupPickerMYGlobal(); // Tutup bulan (mundur 1 step)
+    renderKalenderVisual(); // Refresh kalender yang ada di baliknya
 }
 
 function ubahThnGlobal(v, isYearOnly = false) {
@@ -247,20 +252,87 @@ function ubahThnGlobal(v, isYearOnly = false) {
     else renderPickerMYGlobalInner(false);
 }
 
-function setThnGlobal(y) {
-    currentDate.setFullYear(y);
-    document.getElementById('pickerYearOnlyGlobal').style.display = 'none';
-    renderPickerMYGlobalInner(false);
+
+// ==========================================
+// 3. PICKER TAHUN GLOBAL (LEVEL 3)
+// ==========================================
+function bukaYearPickerGlobal() {
+    let yrPicker = document.getElementById('pickerYearOnlyGlobal');
+    if (!yrPicker) {
+        yrPicker = document.createElement('div');
+        yrPicker.id = 'pickerYearOnlyGlobal';
+        yrPicker.className = 'ios-overlay';
+        yrPicker.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 27000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);`;
+        document.body.appendChild(yrPicker);
+    }
+    renderYearPickerGlobalInner(true);
+    yrPicker.style.display = 'flex';
+
+    // --- STEP NAVIGATION LOGIC ---
+    const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
+    const myLvl = baseLvl + 1;
+    history.pushState({ id: 'pickerYearOnlyGlobal', level: myLvl }, '', '');
+
+    window.handleBackPickerYearOnlyGlobal = function(e) {
+        const currentLvl = e.state ? (e.state.level || 0) : 0;
+        if (currentLvl < myLvl) {
+            const y = document.getElementById('pickerYearOnlyGlobal');
+            if (y) y.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackPickerYearOnlyGlobal);
+        }
+    };
+    window.addEventListener('popstate', window.handleBackPickerYearOnlyGlobal);
 }
 
-function setBlnGlobal(i) {
-    currentDate.setMonth(i);
-    document.getElementById('pickerMYGlobal').style.display = 'none';
-    renderKalenderVisual();
+function renderYearPickerGlobalInner(withAnim = false) {
+    const startY = currentDate.getFullYear() - 4;
+    const endY = startY + 11; // 12 Kotak (4 Baris x 3 Kolom)
+    let yearHtml = '';
+    const animStyle = withAnim ? '' : 'animation: none !important; transition: none !important;';
+
+    for (let y = startY; y <= endY; y++) {
+        yearHtml += `<div class="grid-item ${y === currentDate.getFullYear() ? 'active' : ''}" onclick="setThnGlobal(${y})" style="padding: 12px 0; text-align: center; border-radius: 8px;">${y}</div>`;
+    }
+
+    const yrPicker = document.getElementById('pickerYearOnlyGlobal');
+    if(!yrPicker) return;
+
+    // KONSISTENSI: Sama persis dengan picker bulan (Width 320, Height 380, Grid 3 kolom)
+    yrPicker.innerHTML = `
+        <div class="ios-modal-form profile-expand-anim" style="width: 320px; height: 380px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; ${animStyle}; background: var(--card-bg); border-radius: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0;">
+                <button class="btn-icon-edit" onclick="ubahThnGlobal(-12, true)"><i class="fa-solid fa-chevron-left"></i></button>
+                <h2 style="margin:0; font-size: 18px; color: var(--text-primary);">${startY} - ${endY}</h2>
+                <button class="btn-icon-edit" onclick="ubahThnGlobal(12, true)"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="grid-picker" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex-grow: 1; align-content: center;">
+                ${yearHtml}
+            </div>
+            <div style="text-align: center; margin-top: auto; flex-shrink: 0; padding-top: 15px;">
+                <button class="btn-text-batal" onclick="tutupPickerYearOnlyGlobal()" style="width: 100%; border: none; background: transparent; color: #FF3B30; font-weight: 700; padding: 10px; font-size: 16px;">BATAL</button>
+            </div>
+        </div>
+    `;
+}
+
+function tutupPickerYearOnlyGlobal() {
+    if (history.state && history.state.id === 'pickerYearOnlyGlobal') {
+        history.back(); 
+    } else {
+        const y = document.getElementById('pickerYearOnlyGlobal');
+        if(y) y.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackPickerYearOnlyGlobal);
+    }
+}
+
+function setThnGlobal(y) {
+    currentDate.setFullYear(y);
+    tutupPickerYearOnlyGlobal(); // Tutup tahun (mundur 1 step)
+    renderPickerMYGlobalInner(false); // Refresh bulan yang ada di baliknya
 }
 
 // ==========================================
-// FUNGSI GLOBAL LAINNYA (TETAP AMAN)
+// FUNGSI GLOBAL LAINNYA & IOSAlert
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     muatFotoDashboard(); 
@@ -285,12 +357,8 @@ function bukaIosPicker(inputId, judul, opsiArray) {
     pickerOverlay.innerHTML = `
         <div class="ios-center-popup">
             <div class="ios-popup-header">${judul}</div>
-            <div class="ios-popup-body">
-                ${opsiHtml}
-            </div>
-            <div class="ios-popup-footer">
-                <button onclick="tutupIosPicker()">BATAL</button>
-            </div>
+            <div class="ios-popup-body">${opsiHtml}</div>
+            <div class="ios-popup-footer"><button onclick="tutupIosPicker()">BATAL</button></div>
         </div>
     `;
     pickerOverlay.style.display = 'flex';
@@ -348,6 +416,9 @@ if (themeToggleBtn) {
     });
 }
 
+// ==========================================
+// IOSAlert - NATIVE LOOK & 50:50 BUTTON RATIO
+// ==========================================
 const IOSAlert = {
     show: function(judul, pesan, opsi = {}) {
         const existing = document.getElementById('iosAlertOverlay');
@@ -357,12 +428,18 @@ const IOSAlert = {
         const teksBatal = opsi.teksBatal || null; 
         const onConfirm = opsi.onConfirm || null;
         const onCancel = opsi.onCancel || null;
+        const durasi = opsi.durasi || 2000; 
+
+        // State Inheritance pada IOSAlert (Leveling)
+        const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
+        const myLvl = baseLvl + 1;
+        history.pushState({ id: 'iosAlert', level: myLvl }, '', '');
 
         const overlay = document.createElement('div');
         overlay.id = 'iosAlertOverlay';
         overlay.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.4); z-index: 99999;
+            background: rgba(0, 0, 0, 0.4); z-index: 999999;
             display: flex; justify-content: center; align-items: center;
             opacity: 0; transition: opacity 0.2s ease;
         `;
@@ -370,59 +447,56 @@ const IOSAlert = {
         const isDark = document.body.classList.contains('dark-theme');
         const borderColor = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
         const bgColor = isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+        const isToast = !teksBatal && !onConfirm;
 
         let buttonHTML = '';
-        if (teksBatal) {
+        if (!isToast) {
+            // FIX: Pengaturan Lebar Flex Button Secara Eksplisit
             buttonHTML = `
-                <button id="iosAlertCancel" style="flex: 1; padding: 12px 0; background: transparent; border: none; border-right: 1px solid ${borderColor}; color: #007AFF; font-size: 17px; cursor: pointer; outline: none; font-family: inherit;">${teksBatal}</button>
-                <button id="iosAlertConfirm" style="flex: 1; padding: 12px 0; background: transparent; border: none; color: #007AFF; font-size: 17px; font-weight: 600; cursor: pointer; outline: none; font-family: inherit;">${teksTombol}</button>
-            `;
-        } else {
-            buttonHTML = `
-                <button id="iosAlertConfirm" style="width: 100%; padding: 12px 0; background: transparent; border: none; color: #007AFF; font-size: 17px; font-weight: 600; cursor: pointer; outline: none; font-family: inherit;">${teksTombol}</button>
+                <div style="border-top: 1px solid ${borderColor}; display: flex; width: 100%;">
+                    ${teksBatal ? `<button id="iosAlertCancel" style="flex: 1; width: 50%; padding: 13px 0; background: transparent; border: none; border-right: 1px solid ${borderColor}; color: #007AFF; font-size: 17px; cursor: pointer;">${teksBatal}</button>` : ''}
+                    <button id="iosAlertConfirm" style="flex: 1; width: ${teksBatal ? '50%' : '100%'}; padding: 13px 0; background: transparent; border: none; color: #007AFF; font-size: 17px; font-weight: 600; cursor: pointer;">${teksTombol}</button>
+                </div>
             `;
         }
 
         overlay.innerHTML = `
-            <div style="width: 270px; background: ${bgColor}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 14px; text-align: center; overflow: hidden; transform: scale(1.1); transition: transform 0.2s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div style="width: 270px; background: ${bgColor}; backdrop-filter: blur(20px); border-radius: 14px; text-align: center; overflow: hidden; transform: scale(1.1); transition: transform 0.2s cubic-bezier(0.1, 0.7, 0.1, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                 <div style="padding: 20px 16px;">
                     <h3 style="margin: 0 0 5px 0; font-size: 17px; font-weight: 600; color: var(--text-primary);">${judul}</h3>
-                    <p style="margin: 0; font-size: 13px; line-height: 1.3; color: var(--text-primary); font-weight: 400; opacity: 0.9;">${pesan}</p>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-primary); opacity: 0.9;">${pesan}</p>
                 </div>
-                <div style="border-top: 1px solid ${borderColor}; display: flex; width: 100%;">
-                    ${buttonHTML}
-                </div>
+                ${buttonHTML}
             </div>
         `;
 
         document.body.appendChild(overlay);
 
-        requestAnimationFrame(() => {
-            overlay.style.opacity = '1';
-            overlay.querySelector('div').style.transform = 'scale(1)';
-        });
-
-        const tutupAlert = () => {
+        const tutupAlertInternal = () => {
             overlay.style.opacity = '0';
-            overlay.querySelector('div').style.transform = 'scale(0.9)';
-            setTimeout(() => overlay.remove(), 200);
+            const card = overlay.querySelector('div');
+            if (card) card.style.transform = 'scale(0.9)';
+            window.removeEventListener('popstate', handleBackHP);
+            setTimeout(() => overlay.remove(), 250);
         };
 
-        document.getElementById('iosAlertConfirm').addEventListener('click', () => {
-            tutupAlert();
-            if (typeof onConfirm === 'function') onConfirm();
-        });
+        const handleBackHP = (e) => {
+            const currentLvl = e.state ? (e.state.level || 0) : 0;
+            if (currentLvl < myLvl) tutupAlertInternal();
+        };
+        window.addEventListener('popstate', handleBackHP);
 
-        if (teksBatal) {
-            document.getElementById('iosAlertCancel').addEventListener('click', () => {
-                tutupAlert();
-                if (typeof onCancel === 'function') onCancel();
-            });
+        requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.querySelector('div').style.transform = 'scale(1)'; });
+
+        if (!isToast) {
+            document.getElementById('iosAlertConfirm').onclick = () => { history.back(); if (onConfirm) onConfirm(); };
+            if (teksBatal) document.getElementById('iosAlertCancel').onclick = () => { history.back(); if (onCancel) onCancel(); };
+        } else {
+            setTimeout(() => { if (history.state && history.state.id === 'iosAlert') history.back(); }, durasi);
         }
     }
 };
 
-// --- FUNGSI FORMATTING HEADER (NAMA & USERNAME) ---
 function muatDataHeader() {
     const usernameRaw = localStorage.getItem('username') || "user";
     const namaRaw = localStorage.getItem('nama_user') || usernameRaw;
@@ -432,38 +506,16 @@ function muatDataHeader() {
     const elUser = document.getElementById('displayUsername');
     const elFotos = document.querySelectorAll('.profile-pic');
 
-    // PERBAIKAN: Tambahkan .toUpperCase() pada namaRaw agar selalu huruf besar
     if (elNama) elNama.innerText = namaRaw.toUpperCase();
-    
-    // Username biarkan huruf kecil
     if (elUser) elUser.innerText = "@" + usernameRaw.toLowerCase();
-
-    elFotos.forEach(img => {
-        img.src = fotoTersimpan;
-    });
+    elFotos.forEach(img => img.src = fotoTersimpan);
 }
-
-// main.js - Sistem Jam & Tanggal Real-time
 
 function updateWaktu() {
     const sekarang = new Date();
-    
-    // 1. Format Jam (HH:mm:ss)
-    const jam = String(sekarang.getHours()).padStart(2, '0');
-    const menit = String(sekarang.getMinutes()).padStart(2, '0');
-    const detik = String(sekarang.getSeconds()).padStart(2, '0');
-    const displayJam = `${jam}:${menit}:${detik}`;
+    const displayJam = String(sekarang.getHours()).padStart(2, '0') + ':' + String(sekarang.getMinutes()).padStart(2, '0') + ':' + String(sekarang.getSeconds()).padStart(2, '0');
+    const displayTanggal = sekarang.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    // 2. Format Tanggal Indonesia (Hari, Tanggal Bulan Tahun)
-    const opsiTanggal = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    };
-    const displayTanggal = sekarang.toLocaleDateString('id-ID', opsiTanggal);
-
-    // 3. Masukkan ke elemen HTML
     const elJam = document.getElementById('jam-sekarang');
     const elTgl = document.getElementById('tanggal-sekarang');
 
@@ -471,8 +523,5 @@ function updateWaktu() {
     if (elTgl) elTgl.innerText = displayTanggal;
 }
 
-// Jalankan fungsi setiap 1 detik (1000ms)
 setInterval(updateWaktu, 1000);
-
-// Panggil sekali di awal agar tidak menunggu 1 detik saat refresh
 updateWaktu();
