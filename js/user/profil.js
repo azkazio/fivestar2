@@ -1,11 +1,67 @@
-// profil.js - VERSI FINAL (Selector, Pinch, Rotation, Footer Action & Dash Sync)
+// profil.js - VERSI FINAL (Center Popup Zoom, Fixed Skeleton Size, No Blink)
+// Dikembangkan oleh: RONNY (2026)
 
 let tempImg = null;
 let selectorPos = { x: 0, y: 0, size: 250 }; 
 let currentRotation = 0; 
 let animationFrameId = null;
 
-// --- 1. UTILITY FUNCTIONS ---
+// --- 1. CSS INJECTION UNTUK POPUP PROFIL & SKELETON ---
+if (!document.getElementById('profil-custom-style')) {
+    const style = document.createElement('style');
+    style.id = 'profil-custom-style';
+    style.innerHTML = `
+        /* Animasi Zoom dari Tengah (Bukan Slide dari bawah) */
+        @keyframes iosZoomProfil {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-zoom-profil {
+            animation: iosZoomProfil 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        /* Mengunci ukuran modal agar tidak joget/berubah saat data masuk */
+        .fixed-profile-card {
+            width: 320px;
+            min-height: 570px; /* Ukuran terkunci */
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            background: var(--card-bg);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .text-ellipsis-profil {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            display: block;
+        }
+        .profil-banner-bg {
+            height: 110px;
+            background: linear-gradient(135deg, #007AFF, #5856D6);
+            flex-shrink: 0;
+        }
+        .profil-avatar-wrapper {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 4px solid var(--card-bg);
+            background: var(--card-bg);
+            margin: -45px auto 0;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// --- 2. UTILITY FUNCTIONS ---
 function hitungUmur(tglLahir) {
     if (!tglLahir) return "Belum diatur";
     const lahir = new Date(tglLahir);
@@ -47,7 +103,7 @@ async function refreshDataProfilUI() {
     }
 }
 
-// --- 2. ACTION SHEET ---
+// --- 3. ACTION SHEET FOTO (LEVEL 2/3) ---
 function pemicuPilihFoto() {
     let actionSheet = document.getElementById('actionSheetFoto');
     if (!actionSheet) {
@@ -65,7 +121,7 @@ function pemicuPilihFoto() {
                 .action-item { padding: 18px; display: flex; align-items: center; gap: 15px; border-bottom: 0.5px solid rgba(142,142,147,0.2); color: #007AFF; font-size: 17px; cursor: pointer; }
                 .action-item i { width: 20px; text-align: center; }
                 .action-item.delete { color: #FF3B30; }
-                .action-sheet-footer button { width: 100%; padding: 18px; border-radius: 14px; background: var(--card-bg); color: #007AFF; font-weight: 600; border: none; font-size: 17px; }
+                .action-sheet-footer button { width: 100%; padding: 18px; border-radius: 14px; background: var(--card-bg); color: #007AFF; font-weight: 600; border: none; font-size: 17px; cursor: pointer; }
                 
                 .wa-footer-actions { position: absolute; bottom: 0; left: 0; width: 100%; height: 80px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; box-sizing: border-box; z-index: 110; }
                 .btn-wa-icon { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
@@ -78,8 +134,8 @@ function pemicuPilihFoto() {
         actionSheet.innerHTML = `
             <div class="ios-action-sheet profile-expand-anim">
                 <div class="action-sheet-body">
-                    <div class="action-item" onclick="pilihSumber('camera')"><i class="fa-solid fa-camera"></i> <span>Kamera</span></div>
-                    <div class="action-item" onclick="pilihSumber('gallery')"><i class="fa-solid fa-image"></i> <span>Galeri</span></div>
+                    <div class="action-item" onclick="pilihSumber('camera')"><i class="fa-solid fa-camera"></i> <span style="color: var(--text-primary);">Kamera</span></div>
+                    <div class="action-item" onclick="pilihSumber('gallery')"><i class="fa-solid fa-image"></i> <span style="color: var(--text-primary);">Galeri</span></div>
                     <div class="action-item delete" onclick="hapusFotoProfil()"><i class="fa-solid fa-trash-can"></i> <span>Hapus Foto</span></div>
                 </div>
                 <div class="action-sheet-footer"><button onclick="tutupActionSheet()">Batal</button></div>
@@ -88,9 +144,31 @@ function pemicuPilihFoto() {
         document.body.appendChild(actionSheet);
     }
     actionSheet.style.display = 'flex';
+
+    history.pushState({ id: 'actionSheetFoto' }, '', '');
+    
+    // Gunakan ID checking yang tahan terhadap tumpukan modal baru
+    window.handleBackActionSheet = function(e) {
+        const state = e.state;
+        if (!state || state.id === 'modalProfil') {
+            const a = document.getElementById('actionSheetFoto');
+            if (a) a.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackActionSheet);
+        }
+    };
+    window.addEventListener('popstate', window.handleBackActionSheet);
 }
 
-function tutupActionSheet() { document.getElementById('actionSheetFoto').style.display = 'none'; }
+function tutupActionSheet() { 
+    if (history.state && history.state.id === 'actionSheetFoto') {
+        history.back(); 
+    } else {
+        const a = document.getElementById('actionSheetFoto');
+        if (a) a.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackActionSheet);
+    }
+}
+
 function pilihSumber(tipe) {
     const input = document.getElementById('inputFotoProfil');
     if (tipe === 'camera') input.setAttribute('capture', 'environment');
@@ -101,84 +179,98 @@ function pilihSumber(tipe) {
 
 function hapusFotoProfil() {
     tutupActionSheet();
-    IOSAlert.show("Hapus Foto", "Kembalikan foto profil ke default?", {
-        teksBatal: "Batal", teksTombol: "Hapus",
-        onConfirm: () => {
-            const def = window.avatarSiluet;
-            localStorage.setItem('user_foto_base64', def);
-            document.getElementById('fotoProfilUtama').src = def;
-            const elDash = document.querySelector('.profile-pic');
-            if(elDash) elDash.src = def;
-            const u = firebase.auth().currentUser;
-            if(u && window.db) window.db.ref(u.uid).update({ foto: def });
-        }
-    });
+    setTimeout(() => {
+        IOSAlert.show("Hapus Foto", "Kembalikan foto profil ke default?", {
+            teksBatal: "Batal", teksTombol: "Hapus",
+            onConfirm: () => {
+                const def = window.avatarSiluet;
+                localStorage.setItem('user_foto_base64', def);
+                document.getElementById('fotoProfilUtama').src = def;
+                const elDash = document.querySelector('.profile-pic');
+                if(elDash) elDash.src = def;
+                const u = firebase.auth().currentUser;
+                if(u && window.db) window.db.ref(u.uid).update({ foto: def });
+            }
+        });
+    }, 200); 
 }
 
-// --- 3. UI POPUP PROFIL ---
+// --- 4. UI POPUP PROFIL (LEVEL 1 / ROOT) ---
 function bukaPopupProfil(event) {
     if(event) event.preventDefault();
     let modal = document.getElementById('profileIosModal');
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'profileIosModal';
-        modal.className = 'profile-overlay ios-overlay';
-        modal.style.zIndex = '21000';
+        // Dibuat align center agar muncul di tengah, bukan nempel di bawah
+        modal.className = 'ios-overlay'; 
+        modal.style.cssText = 'z-index: 21000; align-items: center; justify-content: center;';
+        
         const f = localStorage.getItem('user_foto_base64') || window.avatarSiluet;
         modal.innerHTML = `
-            <div class=\"profile-card profile-expand-anim\">
-                <div class=\"profile-banner\"></div>
-                <div class=\"modal-profile-info\">
-                    <div class=\"profile-img-container\">
-                        <div class=\"profile-pic-wrapper popup-size\" onclick=\"bukaFotoFull(this.querySelector('img').src)\">
-                            <img src=\"${f}\" alt=\"Profile\" id=\"fotoProfilUtama\" class=\"profile-pic\">
+            <div class="modal-zoom-profil fixed-profile-card">
+                <div class="profil-banner-bg"></div>
+                <div style="flex-grow: 1; display: flex; flex-direction: column; padding-bottom: 15px;">
+                    <div style="position: relative; text-align: center;">
+                        <div class="profil-avatar-wrapper" onclick="bukaFotoFull(this.querySelector('img').src)" style="cursor: pointer;">
+                            <img src="${f}" alt="Profile" id="fotoProfilUtama" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
-                        <input type=\"file\" id=\"inputFotoProfil\" accept=\"image/*\" style=\"display:none\" onchange=\"bukaEditorCrop(this)\">
-                        <button class=\"btn-edit-foto\" onclick=\"pemicuPilihFoto()\"><i class=\"fa-solid fa-camera\"></i></button>
+                        <input type="file" id="inputFotoProfil" accept="image/*" style="display:none" onchange="bukaEditorCrop(this)">
+                        <button onclick="pemicuPilihFoto()" style="position: absolute; bottom: 0; right: calc(50% - 45px); width: 32px; height: 32px; border-radius: 50%; background: #007AFF; color: white; border: 2px solid var(--card-bg); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                            <i class="fa-solid fa-camera" style="font-size: 13px;"></i>
+                        </button>
                     </div>
-                    <h3 id=\"displayNamaProfil\">MEMUAT...</h3>
-                    <p class=\"role\" id=\"displayUserSubLokal\">@user</p>
-                    <div style=\"background: var(--card-bg); border-radius: 16px; margin: 15px; border: 1px solid rgba(142,142,147,0.12); overflow: hidden; text-align: left;\">
-                        <div style=\"display:flex; align-items:center; padding:14px 15px; border-bottom:0.5px solid rgba(142,142,147,0.2); gap:15px;\">
-                            <div style=\"width:32px; height:32px; border-radius:8px; background:#007AFF; display:flex; justify-content:center; align-items:center;\"><i class=\"fa-solid fa-envelope\" style=\"color:white; font-size:14px;\"></i></div>
-                            <div style=\"display:flex; flex-direction:column; overflow:hidden;\">
-                                <span style=\"font-size:11px; color:#8E8E93; font-weight:700; text-transform:uppercase;\">Email Akun</span>
-                                <span id=\"displayEmailProfil\" style=\"font-size:15px; color:var(--text-primary); font-weight:500;\">Memuat...</span>
+                    
+                    <h3 id="displayNamaProfil" class="text-ellipsis-profil" style="color: var(--text-primary); margin: 12px 0 2px 0; text-align: center; font-size: 19px; font-weight: 800; padding: 0 15px;">Memuat...</h3>
+                    <p id="displayUserSubLokal" style="text-align: center; margin: 0 0 15px 0; color: #8E8E93; font-size: 13px; font-weight: 500;">@user</p>
+
+                    <div style="background: rgba(142,142,147,0.05); border-radius: 16px; margin: 0 15px; border: 1px solid rgba(142,142,147,0.12); text-align: left; display: flex; flex-direction: column;">
+                        
+                        <div style="display:flex; align-items:center; padding:12px 15px; border-bottom:0.5px solid rgba(142,142,147,0.2); gap:12px;">
+                            <div style="width:28px; height:28px; border-radius:7px; background:#007AFF; display:flex; justify-content:center; align-items:center; flex-shrink: 0;"><i class="fa-solid fa-envelope" style="color:white; font-size:12px;"></i></div>
+                            <div style="display:flex; flex-direction:column; overflow:hidden; flex-grow: 1;">
+                                <span style="font-size:10px; color:#8E8E93; font-weight:700; text-transform:uppercase;">Email Akun</span>
+                                <span id="displayEmailProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600;">Memuat...</span>
                             </div>
                         </div>
-                        <div style=\"display:flex; align-items:center; padding:14px 15px; border-bottom:0.5px solid rgba(142,142,147,0.2); gap:15px;\">
-                            <div style=\"width:32px; height:32px; border-radius:8px; background:#34C759; display:flex; justify-content:center; align-items:center;\"><i class=\"fa-solid fa-phone\" style=\"color:white; font-size:14px;\"></i></div>
-                            <div style=\"display:flex; flex-direction:column;\">
-                                <span style=\"font-size:11px; color:#8E8E93; font-weight:700; text-transform:uppercase;\">Nomor Telepon</span>
-                                <span id=\"displayHpProfil\" style=\"font-size:15px; color:var(--text-primary); font-weight:500;\">Memuat...</span>
+                        
+                        <div style="display:flex; align-items:center; padding:12px 15px; border-bottom:0.5px solid rgba(142,142,147,0.2); gap:12px;">
+                            <div style="width:28px; height:28px; border-radius:7px; background:#34C759; display:flex; justify-content:center; align-items:center; flex-shrink: 0;"><i class="fa-solid fa-phone" style="color:white; font-size:12px;"></i></div>
+                            <div style="display:flex; flex-direction:column; overflow:hidden; flex-grow: 1;">
+                                <span style="font-size:10px; color:#8E8E93; font-weight:700; text-transform:uppercase;">Nomor Telepon</span>
+                                <span id="displayHpProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600;">Memuat...</span>
                             </div>
                         </div>
-                        <div style=\"display:flex; align-items:center; padding:14px 15px; border-bottom:0.5px solid rgba(142,142,147,0.2); gap:15px;\">
-                            <div style=\"width:32px; height:32px; border-radius:8px; background:#5856D6; display:flex; justify-content:center; align-items:center;\"><i class=\"fa-solid fa-venus-mars\" style=\"color:white; font-size:14px;\"></i></div>
-                            <div style=\"display:flex; flex-direction:column;\">
-                                <span style=\"font-size:11px; color:#8E8E93; font-weight:700; text-transform:uppercase;\">Jenis Kelamin</span>
-                                <span id=\"displayGenderProfil\" style=\"font-size:15px; color:var(--text-primary); font-weight:500;\">Memuat...</span>
+                        
+                        <div style="display:flex; align-items:center; padding:12px 15px; border-bottom:0.5px solid rgba(142,142,147,0.2); gap:12px;">
+                            <div style="width:28px; height:28px; border-radius:7px; background:#5856D6; display:flex; justify-content:center; align-items:center; flex-shrink: 0;"><i class="fa-solid fa-venus-mars" style="color:white; font-size:12px;"></i></div>
+                            <div style="display:flex; flex-direction:column; overflow:hidden; flex-grow: 1;">
+                                <span style="font-size:10px; color:#8E8E93; font-weight:700; text-transform:uppercase;">Jenis Kelamin</span>
+                                <span id="displayGenderProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600;">Memuat...</span>
                             </div>
                         </div>
-                        <div style=\"display:flex; align-items:center; padding:14px 15px; border-bottom:0.5px solid rgba(142,142,147,0.2); gap:15px;\">
-                            <div style=\"width:32px; height:32px; border-radius:8px; background:#FF9500; display:flex; justify-content:center; align-items:center;\"><i class=\"fa-solid fa-calendar-day\" style=\"color:white; font-size:14px;\"></i></div>
-                            <div style=\"display:flex; flex-direction:column;\">
-                                <span style=\"font-size:11px; color:#8E8E93; font-weight:700; text-transform:uppercase;\">Usia Saat Ini</span>
-                                <span id=\"displayUmurProfil\" style=\"font-size:15px; color:var(--text-primary); font-weight:500;\">Memuat...</span>
+                        
+                        <div style="display:flex; align-items:center; padding:12px 15px; border-bottom:0.5px solid rgba(142,142,147,0.2); gap:12px;">
+                            <div style="width:28px; height:28px; border-radius:7px; background:#FF9500; display:flex; justify-content:center; align-items:center; flex-shrink: 0;"><i class="fa-solid fa-calendar-day" style="color:white; font-size:12px;"></i></div>
+                            <div style="display:flex; flex-direction:column; overflow:hidden; flex-grow: 1;">
+                                <span style="font-size:10px; color:#8E8E93; font-weight:700; text-transform:uppercase;">Usia Saat Ini</span>
+                                <span id="displayUmurProfil" class="text-ellipsis-profil" style="font-size:14px; color:var(--text-primary); font-weight:600;">Memuat...</span>
                             </div>
                         </div>
-                        <div style=\"display:flex; align-items:flex-start; padding:14px 15px; gap:15px;\">
-                            <div style=\"width:32px; height:32px; border-radius:8px; background:#FF3B30; display:flex; justify-content:center; align-items:center; margin-top:2px;\"><i class=\"fa-solid fa-location-dot\" style=\"color:white; font-size:14px;\"></i></div>
-                            <div style=\"display:flex; flex-direction:column;\">
-                                <span style=\"font-size:11px; color:#8E8E93; font-weight:700; text-transform:uppercase;\">Alamat Domisili</span>
-                                <span id=\"displayAlamatProfil\" style=\"font-size:14px; color:var(--text-primary); line-height:1.5; font-weight:500;\">Memuat...</span>
+                        
+                        <div style="display:flex; align-items:flex-start; padding:12px 15px; gap:12px;">
+                            <div style="width:28px; height:28px; border-radius:7px; background:#FF3B30; display:flex; justify-content:center; align-items:center; margin-top:2px; flex-shrink: 0;"><i class="fa-solid fa-location-dot" style="color:white; font-size:12px;"></i></div>
+                            <div style="display:flex; flex-direction:column; overflow:hidden; flex-grow: 1;">
+                                <span style="font-size:10px; color:#8E8E93; font-weight:700; text-transform:uppercase;">Alamat Domisili</span>
+                                <span id="displayAlamatProfil" style="font-size:13px; color:var(--text-primary); line-height:1.4; font-weight:600; min-height: 36px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Memuat...</span>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class=\"profile-actions\">
-                    <button class=\"btn-settings\" onclick=\"bukaPengaturan()\"><i class=\"fa-solid fa-gear\"></i> Pengaturan</button>
-                    <button class=\"btn-close-profile\" onclick=\"document.getElementById('profileIosModal').style.display='none'\">Tutup</button>
+                    
+                    <div style="margin-top: auto; padding: 15px 15px 0 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <button onclick="bukaPengaturan()" style="width: 100%; padding: 14px; border-radius: 12px; background: var(--text-primary); color: var(--card-bg); font-weight: 700; border: none; font-size: 15px; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer;"><i class="fa-solid fa-gear"></i> Pengaturan Akun</button>
+                        <button onclick="tutupPopupProfil()" style="width: 100%; padding: 14px; border-radius: 12px; background: transparent; color: #FF3B30; font-weight: 700; border: 1px solid rgba(255,59,48,0.2); font-size: 15px; cursor: pointer;">Tutup</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -186,9 +278,33 @@ function bukaPopupProfil(event) {
     }
     refreshDataProfilUI();
     modal.style.display = 'flex';
+
+    history.pushState({ id: 'modalProfil' }, '', '');
+    
+    // Hanya tertutup jika history benar-benar kosong (Dashboard)
+    window.handleBackProfil = function(e) {
+        const state = e.state;
+        if (!state) {
+            const m = document.getElementById('profileIosModal');
+            if (m) m.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackProfil);
+        }
+    };
+    window.removeEventListener('popstate', window.handleBackProfil);
+    window.addEventListener('popstate', window.handleBackProfil);
 }
 
-// --- 4. SELECTOR ENGINE + ROTATION + SYNC ---
+function tutupPopupProfil() {
+    if (history.state && history.state.id === 'modalProfil') {
+        history.back();
+    } else {
+        const modal = document.getElementById('profileIosModal');
+        if (modal) modal.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackProfil);
+    }
+}
+
+// --- 5. SELECTOR EDITOR CROP (LEVEL 2/3) ---
 function bukaEditorCrop(input) {
     const file = input.files[0];
     if (!file) return;
@@ -230,6 +346,18 @@ function bukaEditorCrop(input) {
                 selector.style.top = (wrapper.offsetHeight - 80 - selectorPos.size) / 2 + 'px';
             }, 50);
             cropModal.style.display = 'flex';
+
+            history.pushState({ id: 'cropEditor' }, '', '');
+            
+            window.handleBackCrop = function(e) {
+                const state = e.state;
+                if (!state || state.id === 'modalProfil') {
+                    const c = document.getElementById('cropModalWA');
+                    if (c) c.style.display = 'none';
+                    window.removeEventListener('popstate', window.handleBackCrop);
+                }
+            };
+            window.addEventListener('popstate', window.handleBackCrop);
         };
     };
     reader.readAsDataURL(file);
@@ -293,7 +421,6 @@ function terapkanCrop() {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const rect = img.getBoundingClientRect();
-
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     
@@ -318,15 +445,10 @@ function terapkanCrop() {
     ctx.drawImage(tempCanvas, cropX, cropY, cropSize, cropSize, 0, 0, 500, 500);
 
     const base64 = canvas.toDataURL('image/jpeg', 0.7);
-    
-    // 1. UPDATE POPUP PROFIL
     document.getElementById('fotoProfilUtama').src = base64;
-    
-    // 2. UPDATE DASHBOARD (SOLUSI)
     const elDash = document.querySelector('.profile-pic');
     if (elDash) elDash.src = base64;
     
-    // 3. SIMPAN LOKAL & FIREBASE
     localStorage.setItem('user_foto_base64', base64);
     const u = firebase.auth().currentUser;
     if (u && window.db) {
@@ -336,10 +458,17 @@ function terapkanCrop() {
 }
 
 function tutupEditorCrop() {
-    const m = document.getElementById('cropModalWA'); if(m) m.style.display = 'none';
     document.getElementById('inputFotoProfil').value = "";
+    if (history.state && history.state.id === 'cropEditor') {
+        history.back();
+    } else {
+        const m = document.getElementById('cropModalWA'); 
+        if(m) m.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackCrop);
+    }
 }
 
+// --- 6. FOTO FULLSCREEN (LEVEL 2) ---
 function bukaFotoFull(url) {
     let fotoModal = document.getElementById('fotoFullModal');
     if (!fotoModal) {
@@ -347,9 +476,31 @@ function bukaFotoFull(url) {
         fotoModal.id = 'fotoFullModal';
         fotoModal.className = 'foto-full-overlay';
         fotoModal.style.zIndex = '45000';
-        fotoModal.innerHTML = `<button class=\"btn-close-foto-fixed\" onclick=\"document.getElementById('fotoFullModal').style.display='none'\"><i class=\"fa-solid fa-xmark\"></i></button><div class=\"foto-full-container\"><img id=\"imgFullDisplay\" class=\"foto-full-img\"></div>`;
+        fotoModal.innerHTML = `<button class="btn-close-foto-fixed" onclick="tutupFotoFull()"><i class="fa-solid fa-xmark"></i></button><div class="foto-full-container"><img id="imgFullDisplay" class="foto-full-img"></div>`;
         document.body.appendChild(fotoModal);
     }
     document.getElementById('imgFullDisplay').src = url;
     fotoModal.style.display = 'flex';
+
+    history.pushState({ id: 'fotoFull' }, '', '');
+    
+    window.handleBackFotoFull = function(e) {
+        const state = e.state;
+        if (!state || state.id === 'modalProfil') {
+            const f = document.getElementById('fotoFullModal');
+            if (f) f.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackFotoFull);
+        }
+    };
+    window.addEventListener('popstate', window.handleBackFotoFull);
+}
+
+function tutupFotoFull() {
+    if (history.state && history.state.id === 'fotoFull') {
+        history.back();
+    } else {
+        const f = document.getElementById('fotoFullModal');
+        if (f) f.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackFotoFull);
+    }
 }
