@@ -1,4 +1,5 @@
-// login.js - Versi Lengkap & Utuh (UID Root Architecture & iOS Premium UI)
+// login.js - Versi Lengkap & Utuh (UID Root Architecture, iOS Premium UI & Smart Navigation)
+// Dikembangkan oleh: RONNY (2026)
 
 function inisialisasiLogin() {
     let loginOverlay = document.getElementById('loginOverlay');
@@ -58,20 +59,23 @@ function inisialisasiLogin() {
         `;
         document.body.appendChild(loginOverlay);
     }
+    
     loginOverlay.style.display = 'flex';
+    
+    // Set Base Navigasi agar tidak bisa ditutup sembarangan lewat back (karena ini halaman root index)
+    history.replaceState({ id: 'loginRoot', level: 0 }, '', '');
 }
 
-// --- 1. FUNGSI LUPA PASSWORD (DENGAN POPUP KHUSUS) ---
+// --- 1. FUNGSI LUPA PASSWORD (DENGAN POPUP KHUSUS & NAVIGASI LEVEL) ---
 
 function bukaPopupLupaPassword() {
     let overlay = document.getElementById('lupaPassOverlay');
     
-    // Buat popup jika belum ada
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'lupaPassOverlay';
         overlay.className = 'ios-overlay';
-        overlay.style.zIndex = '25000'; // Z-index super tinggi agar di atas form login
+        overlay.style.zIndex = '25000'; 
         
         overlay.innerHTML = `
             <div class="ios-modal-form profile-expand-anim" style="width: 300px; padding: 25px 20px; border-radius: 18px; background: var(--card-bg); box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;">
@@ -89,7 +93,7 @@ function bukaPopupLupaPassword() {
                 <input type="email" id="emailResetLupa" placeholder="email@contoh.com" class="custom-box-input" style="background: var(--bg-color); border: 2px solid transparent; padding: 14px; border-radius: 10px; width: 100%; box-sizing: border-box; outline: none; color: var(--text-primary); font-size: 14px; text-align: center; margin-bottom: 20px;">
                 
                 <div style="display: flex; gap: 10px;">
-                    <button onclick="document.getElementById('lupaPassOverlay').style.display='none'" style="flex: 1; padding: 12px; border-radius: 10px; background: rgba(142,142,147,0.1); color: var(--text-primary); border: none; font-weight: 600; font-size: 14px; cursor: pointer;">Batal</button>
+                    <button onclick="tutupPopupLupaPassword()" style="flex: 1; padding: 12px; border-radius: 10px; background: rgba(142,142,147,0.1); color: var(--text-primary); border: none; font-weight: 600; font-size: 14px; cursor: pointer;">Batal</button>
                     <button onclick="prosesResetSandi()" style="flex: 1; padding: 12px; border-radius: 10px; background: #007AFF; color: white; border: none; font-weight: 600; font-size: 14px; cursor: pointer;">Kirim</button>
                 </div>
             </div>
@@ -97,9 +101,33 @@ function bukaPopupLupaPassword() {
         document.body.appendChild(overlay);
     }
     
-    // Kosongkan kolom input setiap kali dibuka dan tampilkan
     document.getElementById('emailResetLupa').value = "";
     overlay.style.display = 'flex';
+
+    // --- STEP NAVIGATION LOGIC (LUPA PASSWORD) ---
+    const baseLvl = (history.state && history.state.level) ? history.state.level : 0;
+    const myLvl = baseLvl + 1;
+    history.pushState({ id: 'lupaPassModal', level: myLvl }, '', '');
+
+    window.handleBackLupaPass = function(e) {
+        const currentLvl = e.state ? (e.state.level || 0) : 0;
+        if (currentLvl < myLvl) {
+            const m = document.getElementById('lupaPassOverlay');
+            if (m) m.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackLupaPass);
+        }
+    };
+    window.addEventListener('popstate', window.handleBackLupaPass);
+}
+
+function tutupPopupLupaPassword() {
+    if (history.state && history.state.id === 'lupaPassModal') {
+        history.back(); // Trigger popstate
+    } else {
+        const m = document.getElementById('lupaPassOverlay');
+        if (m) m.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackLupaPass);
+    }
 }
 
 // Logika pemrosesan kirim link reset ke Firebase
@@ -107,8 +135,8 @@ function prosesResetSandi() {
     const email = document.getElementById('emailResetLupa').value.trim();
     
     if (email && email.includes('@')) {
-        // Sembunyikan popup reset
-        document.getElementById('lupaPassOverlay').style.display = 'none';
+        // Hapus history state dengan rapi sebelum nembak alert
+        tutupPopupLupaPassword();
         
         // Proses ke Firebase
         firebase.auth().sendPasswordResetEmail(email)
@@ -280,3 +308,7 @@ function togglePassword() {
         icon.classList.replace('fa-eye-slash', 'fa-eye');
     }
 }
+
+// --- ALIAS BRIDGE UNTUK app.js ---
+// Menyambungkan "bukaOpsiSesi()" dari app.js agar mengeksekusi "inisialisasiLogin()"
+window.bukaOpsiSesi = inisialisasiLogin;
