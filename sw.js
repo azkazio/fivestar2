@@ -37,3 +37,24 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
     event.respondWith(fetch(event.request));
 });
+
+// Listener ketika notifikasi di-klik oleh user
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close(); // Tutup bar notifikasi
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+            // Jika aplikasi sudah terbuka, fokuskan saja ke tab tersebut
+            for (var i = 0; i < clientList.length; i++) {
+                var client = clientList[i];
+                if (client.url === '/' && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Jika aplikasi belum terbuka, buka halaman utama
+            if (clients.openWindow) {
+                return clients.openWindow('dashboard.html');
+            }
+        })
+    );
+});

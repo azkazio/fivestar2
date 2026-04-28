@@ -33,7 +33,7 @@
 </head>
 <body>
     <div class="app-container">
-        <header style="padding: 20px 20px 10px 20px;">
+        <header style="padding: 0px 20px 10px 20px;">
             <div class="profile-info" style="display: flex; align-items: center; gap: 15px;"> 
                 <a href="#" onclick="bukaPopupProfil(event)" class="profile-pic-wrapper" 
                    style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: var(--card-bg); display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0,122,255,0.1);">
@@ -46,7 +46,7 @@
             </div>
         </header>
 
-        <div class="datetime-container" style="text-align: center; margin-top: 10px; margin-bottom: -20px;">
+        <div class="datetime-container" style="text-align: center; margin-top: 20px; margin-bottom: -20px;">
             <span id="jam-sekarang" style="font-size: 38px; font-weight: 800; color: var(--text-primary); letter-spacing: -1.5px; display: block; line-height: 1;">00:00:00</span>
             <span id="tanggal-sekarang" style="font-size: 13px; color: #007AFF; font-weight: 700; margin-top: 8px; display: block; text-transform: uppercase; letter-spacing: 1px;">Memuat Tanggal...</span>
         </div>
@@ -87,9 +87,10 @@
     
     <script src="js/core/firebase.js"></script>
     <script src="js/core/main.js"></script>
-    
+    <script src="js/core/app.js"></script>
     <script src="js/user/profil.js"></script>
     <script src="js/user/pengaturan.js"></script>
+    
     <script src="js/features/absen.js"></script>
     <script src="js/features/kalender-absen.js"></script>
     <script src="js/features/kerja.js"></script>
@@ -97,137 +98,5 @@
     <script src="js/features/rincian.js"></script>
     <script src="js/features/gaji.js"></script>
     <script src="js/features/edit-data.js"></script>
-
-    <script>
-    window.antrianAbsenBolong = [];
-
-    // --- 1. SECURITY GUARD ---
-    firebase.auth().onAuthStateChanged(async function(user) {
-        if (user) {
-            console.log("Sesi Aktif: " + user.email);
-            if (typeof refreshDataProfilUI === 'function') refreshDataProfilUI();
-            await jalankanPolisiAbsen(user);
-        } else {
-            window.location.href = "login.html"; 
-        }
-    });
-
-    // --- 2. PATROLI POLISI ABSEN ---
-    async function jalankanPolisiAbsen(user) {
-        const tglDaftar = new Date(user.metadata.creationTime);
-        tglDaftar.setHours(0, 0, 0, 0);
-
-        console.log("Polisi Absen: Memulai patroli...");
-        const listPromises = [];
-        const daftarTglLengkap = [];
-        const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-
-        const waktuSekarang = new Date(); // Ambil waktu aktual saat ini
-
-        // Diubah menjadi i >= 0 agar mengecek "Hari Ini", tetapi dengan logika jam 09:30
-        for (let i = 7; i >= 0; i--) {
-            let d = new Date();
-            d.setDate(d.getDate() - i);
-            d.setHours(0, 0, 0, 0);
-
-            if (d < tglDaftar) continue;
-
-            // --- LOGIKA TENGGAT WAKTU 09.30 UNTUK HARI INI ---
-            if (i === 0) { 
-                const jam = waktuSekarang.getHours();
-                const menit = waktuSekarang.getMinutes();
-                
-                // Jika masih di bawah jam 09:30, LEWATI (jangan tagih absen hari ini)
-                if (jam < 9 || (jam === 9 && menit < 30)) {
-                    console.log("Polisi Absen: Aman, hari ini belum jam 09.30.");
-                    continue; 
-                }
-            }
-            // -------------------------------------------------
-
-            const tglFullStr = d.toLocaleDateString('id-ID', opsi); 
-            const temp = tglFullStr.split(', ');
-            const parts = temp[1].split(" ");
-            
-            const blnTahunId = parts[1] + "_" + parts[2]; 
-            const dateId = tglFullStr.replace(', ', '_').replace(/\s/g, '_'); 
-
-            daftarTglLengkap.push(tglFullStr);
-
-            const p = window.firestore.collection('data').doc(user.uid)
-                        .collection('absen').doc(blnTahunId)
-                        .collection(dateId).doc('harian').get();
-            listPromises.push(p);
-        }
-
-        if (listPromises.length === 0) return;
-
-        try {
-            const snapshots = await Promise.all(listPromises);
-            window.antrianAbsenBolong = [];
-
-            snapshots.forEach((doc, index) => {
-                if (!doc.exists) { 
-                    window.antrianAbsenBolong.push(daftarTglLengkap[index]); 
-                }
-            });
-
-            if (window.antrianAbsenBolong.length > 0) {
-                panggilModalAntrean();
-            }
-        } catch (e) { console.error("Polisi Gagal Patroli:", e); }
-    }
-
-    function panggilModalAntrean() {
-        if (window.antrianAbsenBolong.length > 0) {
-            const tglTarget = window.antrianAbsenBolong[0];
-            if (typeof window.bukaMenuAbsen === 'function') {
-                window.bukaMenuAbsen(null, tglTarget, null, true); 
-            }
-        }
-    }
-
-    function aturNantiSemua() {
-        window.antrianAbsenBolong = []; 
-        const modal = document.getElementById('absenModal'); 
-        if (modal) modal.style.display = 'none'; 
-        
-        if (typeof IOSAlert !== 'undefined') {
-            IOSAlert.show("Peringatan", "Absenmu masih ada yang bolong. Jangan lupa dilengkapi nanti ya!");
-        }
-    }
-
-    // --- 3. REGISTER SERVICE WORKER (PWA) ---
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').then(reg => {
-                // Pantau jika ada update
-                reg.addEventListener('updatefound', () => {
-                    const newWorker = reg.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            if (typeof IOSAlert !== 'undefined') {
-                                IOSAlert.show("Update Tersedia", "Versi terbaru FIVE STAR 2 siap digunakan.", {
-                                    teksTombol: "Segarkan",
-                                    onConfirm: () => {
-                                        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                                    }
-                                });
-                            }
-                        }
-                    });
-                });
-            }).catch(err => console.log('PWA Error:', err));
-        });
-
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-                window.location.reload();
-                refreshing = true;
-            }
-        });
-    }
-    </script>
 </body>
 </html>
