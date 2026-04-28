@@ -542,7 +542,7 @@ function renderInformasiAplikasi(isBackNav = false) {
 }
 
 function bacaVersiDariSW() {
-    fetch('/sw.js').then(r => r.text()).then(text => {
+    fetch('sw.js').then(r => r.text()).then(text => {
         const match = text.match(/const VERSION\s*=\s*['"]([^'"]+)['"]/);
         const el = document.getElementById('teksVersiApp');
         if (match && el) el.innerText = 'Versi ' + match[1];
