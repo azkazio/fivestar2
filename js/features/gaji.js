@@ -1,15 +1,23 @@
-// gaji.js - Modul Slip Gaji (Firestore Parallel Architecture - FS1 & FS2 Split)
+// gaji.js - Modul Slip Gaji (Firestore Parallel Architecture - FS1 & FS2 Split + Tier Bonus)
 
 const namaBulanGaji = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+// KONFIGURASI TIER BONUS (Bisa diubah nilainya)
+// Target = Minimal Jam (FS1+FS2), Nominal = Uang Bonus
+const TIER_BONUS = [
+    { target: 160, nominal: 500000 }, // X untuk 160 Jam
+    { target: 125, nominal: 350000 }, // X untuk 125 Jam
+    { target: 85,  nominal: 250000 }, // X untuk 85 Jam
+    { target: 50,  nominal: 125000 }  // X untuk 50 Jam
+];
 
 const TARIF = {
     POKOK: 900000,
     REFLEXY: 20000, 
     MASSAGE: 21000, 
     MAKAN: 20000,   
-    BONUS_PER_JAM: 2888,
     
-    // Nominal Potongan Lainnya (Silakan disesuaikan)
+    // Nominal Potongan Lainnya
     POTONGAN_ALPA: 100000, 
     POTONGAN_SAKIT: 0,
     POTONGAN_TELAT: 0
@@ -93,7 +101,7 @@ function bukaMenuGaji(event) {
                                 <span id="gjMakanRp" style="color: var(--text-primary);">Rp</span><span id="gjMakan" style="font-weight: 600; text-align: right; color: var(--text-primary);">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.45s;">
-                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Bonus (FS1+FS2)</span><span style="font-size:11px; color:#8E8E93;" id="gjBonusKet">0 Jam</span></div>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Bonus (Target)</span><span style="font-size:11px; color:#8E8E93;" id="gjBonusKet">0 Jam</span></div>
                                 <span id="gjBonusRp" style="color: var(--text-primary);">Rp</span><span id="gjBonus" style="font-weight: 600; text-align: right; color: var(--text-primary);">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; border: 1px solid rgba(0, 122, 255, 0.2); background: rgba(0, 122, 255, 0.05); margin-top: 2px; animation-delay: 0.5s;">
@@ -266,14 +274,13 @@ async function prosesGaji() {
             });
         });
 
-        // --- STEP E: Olah Absen (Uang Makan Hanya untuk "Masuk") ---
+        // --- STEP E: Olah Absen (Uang Makan & Cek Status Bonus) ---
         allAbsenSnap.forEach(doc => {
             if (doc.exists) {
                 const item = doc.data();
                 if (item.status === 'Masuk') {
-                    hariMasuk++; // Hanya "Masuk" yang dapat Uang Makan
+                    hariMasuk++; 
                 } else if (item.status === 'Telat') {
-                    // Telat TIDAK dapat uang makan, hanya dicatat sebagai telat
                     hariTelat++;
                 } else if (item.status === 'Alpa' || item.status === 'Tanpa Keterangan') {
                     hariAlpa++;
@@ -285,7 +292,29 @@ async function prosesGaji() {
             }
         });
 
-        // --- STEP F: KALKULASI AKHIR ---
+        // --- STEP F: KALKULASI BONUS TIER ---
+        const totalJamAll = jamReflexyFS1 + jamMassageFS1 + jamReflexyFS2 + jamMassageFS2;
+        let totalBonusTotal = 0;
+        let statusBonusKet = "Aman";
+
+        // Cek Pelanggaran Bonus (Alpa, Izin, Telat membuat bonus 0)
+        if (hariAlpa > 0 || hariIzin > 0 || hariTelat > 0) {
+            totalBonusTotal = 0;
+            statusBonusKet = "Hangus (Absen)";
+        } else {
+            // Cek Tier Target dari yang tertinggi ke yang terendah
+            for (let i = 0; i < TIER_BONUS.length; i++) {
+                if (totalJamAll >= TIER_BONUS[i].target) {
+                    totalBonusTotal = TIER_BONUS[i].nominal;
+                    statusBonusKet = "Lulus " + TIER_BONUS[i].target + " Jam";
+                    break; // Jika sudah masuk target atas, stop looping
+                }
+            }
+            if (totalBonusTotal === 0) statusBonusKet = "Tidak Capai Target";
+        }
+
+
+        // --- STEP G: KALKULASI AKHIR ---
         
         // 1. Kalkulasi FS 1
         const totalGjReflexyFS1 = jamReflexyFS1 * TARIF.REFLEXY;
@@ -295,11 +324,7 @@ async function prosesGaji() {
         // 2. Kalkulasi FS 2 & Potongan
         const totalGjReflexyFS2 = jamReflexyFS2 * TARIF.REFLEXY;
         const totalGjMassageFS2 = jamMassageFS2 * TARIF.MASSAGE;
-        const totalUangMakan = hariMasuk * TARIF.MAKAN; // hariMasuk murni hanya dari status "Masuk"
-        
-        // Bonus digabung dari total jam FS1 dan FS2
-        const totalJamAll = jamReflexyFS1 + jamMassageFS1 + jamReflexyFS2 + jamMassageFS2;
-        const totalBonusTotal = Math.floor(totalJamAll * TARIF.BONUS_PER_JAM);
+        const totalUangMakan = hariMasuk * TARIF.MAKAN; 
 
         const totalKotorFS2 = TARIF.POKOK + totalGjReflexyFS2 + totalGjMassageFS2 + totalUangMakan + totalBonusTotal;
         
@@ -326,7 +351,9 @@ async function prosesGaji() {
         document.getElementById('gjReflexyKet').innerText = jamReflexyFS2.toFixed(1).replace('.0', '') + " Jam";
         document.getElementById('gjMassageKet').innerText = jamMassageFS2.toFixed(1).replace('.0', '') + " Jam";
         document.getElementById('gjMakanKet').innerText = hariMasuk + " Hari"; 
-        document.getElementById('gjBonusKet').innerText = totalJamAll.toFixed(1).replace('.0', '') + " Jam"; 
+        
+        // Update Ket Bonus Gabungan
+        document.getElementById('gjBonusKet').innerText = `${totalJamAll.toFixed(1).replace('.0', '')} Jam (${statusBonusKet})`;
 
         setNilaiGaji('gjPokok', TARIF.POKOK);
         setNilaiGaji('gjReflexy', totalGjReflexyFS2);
