@@ -73,15 +73,12 @@ function bukaMenuKerja(event) {
     modal.style.display = 'flex';
     if (typeof applyLastChoiceKerja === 'function') applyLastChoiceKerja(); 
 
-    // --- LOGIKA TOMBOL BACK HP (SISTEM LEVELING SINKRON DENGAN MAIN.JS) ---
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 0;
-    const myLvl = baseLvl + 1; // Menetapkan kerja.js sebagai pondasi level
-    history.pushState({ id: 'modalKerja', level: myLvl }, '', ''); 
+    // --- FIX LOGIKA TOMBOL BACK HP (STRICT ID SINKRON DENGAN MAIN.JS) ---
+    history.pushState({ id: 'modalKerja' }, '', ''); 
     
     window.handleBackKerja = function(e) {
-        const currentLvl = e.state ? (e.state.level || 0) : 0;
-        // Hanya tutup modal kerja jika history mundur ke bawah level pondasinya
-        if (currentLvl < myLvl) {
+        // Hanya tutup modal kerja jika history benar-benar mundur ke dashboardRoot atau kosong
+        if (!e.state || e.state.id === 'dashboardRoot') {
             const m = document.getElementById('kerjaIosModal');
             if (m) m.style.display = 'none';
             window.removeEventListener('popstate', window.handleBackKerja);
@@ -218,14 +215,12 @@ function resetFormSetelahSimpanKerja() {
 }
 
 function tutupPopupKerja() {
-    const modal = document.getElementById('kerjaIosModal');
-    if (modal) {
-        modal.style.display = 'none';
-        
-        // Memastikan history.back terpanggil dengan bersih saat ditutup manual (sinkron dg ID)
-        if (history.state && history.state.id === 'modalKerja') {
-            history.back(); 
-        }
+    // Sinkronisasi penutupan tombol manual dengan history
+    if (history.state && history.state.id === 'modalKerja') {
+        history.back(); 
+    } else {
+        const modal = document.getElementById('kerjaIosModal');
+        if (modal) modal.style.display = 'none';
         window.removeEventListener('popstate', window.handleBackKerja);
     }
 }

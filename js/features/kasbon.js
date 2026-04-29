@@ -1,4 +1,4 @@
-// kasbon.js - Modul Kasbon (Firestore Architecture & Timestamp ID)
+// kasbon.js - Modul Kasbon (Firestore Architecture & Timestamp ID + Strict ID Navigation)
 
 function bukaMenuKasbon(event) {
     if(event) event.preventDefault();
@@ -31,7 +31,7 @@ function bukaMenuKasbon(event) {
                         <label>Jenis Kasbon</label>
                         <div class="grid-picker" style="grid-template-columns: 1fr 1fr;">
                             <div class="grid-item" onclick="pilihGridKasbon(this, 'KANTOR')">KANTOR</div>
-                            <div class="grid-item" onclick="pilihGridKasbon(this, 'KANTOR')">PAKET</div>
+                            <div class="grid-item" onclick="pilihGridKasbon(this, 'PAKET')">PAKET</div>
                         </div>
                         <input type="hidden" id="jenisKasbon">
                     </div>
@@ -57,16 +57,12 @@ function bukaMenuKasbon(event) {
     
     modal.style.display = 'flex';
 
-    // --- LOGIKA TOMBOL BACK HP (SISTEM LEVELING SINKRON) ---
-    // Menetapkan kasbon.js sebagai pondasi level (Level 1)
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 0;
-    const myLvl = baseLvl + 1;
-    history.pushState({ id: 'modalKasbon', level: myLvl, rootModal: 'modalKasbon' }, '', ''); 
+    // --- FIX LOGIKA TOMBOL BACK HP (STRICT ID SINKRON DENGAN MAIN.JS) ---
+    history.pushState({ id: 'modalKasbon' }, '', ''); 
     
     window.handleBackKasbon = function(e) {
-        const currentLvl = e.state ? (e.state.level || 0) : 0;
-        // Hanya tutup modal kasbon jika history mundur ke bawah level pondasinya
-        if (currentLvl < myLvl) {
+        // Hanya tutup modal kasbon jika history benar-benar mundur ke dashboardRoot atau kosong
+        if (!e.state || e.state.id === 'dashboardRoot') {
             const m = document.getElementById('kasbonIosModal');
             if (m) m.style.display = 'none';
             window.removeEventListener('popstate', window.handleBackKasbon);
@@ -86,14 +82,12 @@ function pilihGridKasbon(elemen, nilai) {
 }
 
 function tutupPopupKasbon() {
-    const modal = document.getElementById('kasbonIosModal');
-    if (modal) {
-        modal.style.display = 'none';
-        
-        // Memastikan history.back terpanggil dengan bersih saat ditutup manual
-        if (history.state && history.state.id === 'modalKasbon') {
-            history.back(); 
-        }
+    // Sinkronisasi penutupan tombol manual dengan history
+    if (history.state && history.state.id === 'modalKasbon') {
+        history.back(); 
+    } else {
+        const modal = document.getElementById('kasbonIosModal');
+        if (modal) modal.style.display = 'none';
         window.removeEventListener('popstate', window.handleBackKasbon);
     }
 }

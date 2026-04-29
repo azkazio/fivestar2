@@ -1,13 +1,17 @@
-// absen.js - Modul Popup Absensi (Safe Navigation & Toast Version)
+// absen.js - Modul Popup Absensi (Strict ID Navigation & Toast Version)
 
 function bukaMenuAbsen(event, editDate = null, editData = null, isPolisi = false) {
     if(event) event.preventDefault();
     let modal = document.getElementById('absenModal');
     
+    // Mengecek apakah modal sudah terbuka (Penting untuk Mode Polisi agar tidak terjadi tumpukan History State)
+    const isAlreadyOpen = modal && modal.style.display === 'flex';
+
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'absenModal';
         modal.className = 'ios-overlay'; 
+        // Menggunakan z-index tinggi agar berada di atas kalender
         modal.style.zIndex = '35000'; 
         
         modal.innerHTML = `
@@ -68,20 +72,27 @@ function bukaMenuAbsen(event, editDate = null, editData = null, isPolisi = false
             <button class="btn-batal" onclick="tutupMenuAbsen()">Batal</button>
             <button class="btn-simpan" style="background-color: #007AFF !important; color: #FFFFFF !important;" onclick="simpanAbsen(false)">Simpan</button>
         `;
+    }
 
-        // --- BACK BUTTON HP SUPPORT (LEVEL 2) ---
-        // Kita beri level 2 agar tidak bentrok dengan dashboard (0) atau profil (1)
-        history.pushState({ id: 'modalAbsen', level: 2 }, '', ''); 
+    // --- SINKRONISASI STATE UNTUK SEMUA MODE (TERMASUK POLISI) ---
+    // Dipanggil di luar IF agar jika "Atur Nanti" (yang memicu popstate) dipanggil, tidak membuat aplikasi blank (crash)
+    if (!isAlreadyOpen) {
+        history.pushState({ id: 'modalAbsenInput' }, '', ''); 
         
-        const handlePopstateAbsen = (e) => {
-            if (!history.state || history.state.id !== 'modalAbsen') {
+        window.handleBackAbsenInput = function(e) {
+            // SINKRONISASI: Tutup jika kembali ke dashboard ATAU kembali ke modal Kalender ('modalKalenderAbsen') atau rincian
+            if (!e.state || e.state.id === 'modalKalenderAbsen' || e.state.id === 'rincianAbsen' || e.state.id === 'dashboardRoot') {
                 const m = document.getElementById('absenModal');
                 if (m) m.style.display = 'none';
-                if (typeof renderKalenderAbsen === 'function') renderKalenderAbsen();
-                window.removeEventListener('popstate', handlePopstateAbsen);
+                
+                // Segarkan tampilan kotak di kalender
+                if (typeof window.renderKalenderAbsen === 'function') window.renderKalenderAbsen();
+                
+                window.removeEventListener('popstate', window.handleBackAbsenInput);
             }
         };
-        window.addEventListener('popstate', handlePopstateAbsen);
+        window.removeEventListener('popstate', window.handleBackAbsenInput);
+        window.addEventListener('popstate', window.handleBackAbsenInput);
     }
 
     // FIX LOGIKA TANGGAL
@@ -128,16 +139,15 @@ function pilihGridAbsen(elemen, tipe, nilai) {
 }
 
 function tutupMenuAbsen() {
-    const modal = document.getElementById('absenModal');
-    if (modal && modal.style.display !== 'none') {
-        modal.style.display = 'none';
-        
-        // Refresh kalender
-        if (typeof renderKalenderAbsen === 'function') renderKalenderAbsen();
-
-        // Mundur satu langkah di history untuk hapus state modalAbsen
-        if (history.state && history.state.id === 'modalAbsen') {
-            history.back(); 
+    // Sinkronisasi tombol "Batal" manual dengan history Android Back Button
+    if (history.state && history.state.id === 'modalAbsenInput') {
+        history.back(); // Biarkan popstate handler yang menutup UI-nya agar bersih urutannya
+    } else {
+        const modal = document.getElementById('absenModal');
+        if (modal && modal.style.display !== 'none') {
+            modal.style.display = 'none';
+            if (typeof window.renderKalenderAbsen === 'function') window.renderKalenderAbsen();
+            window.removeEventListener('popstate', window.handleBackAbsenInput);
         }
     }
 }
@@ -145,7 +155,7 @@ function tutupMenuAbsen() {
 function resetFormAbsen() {
     document.getElementById('inputStatusAbsen').value = "";
     document.getElementById('inputKantorAbsen').value = "";
-    document.querySelectorAll('.grid-item').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('#absenModal .grid-item').forEach(item => item.classList.remove('active'));
 }
 
 async function simpanAbsen(isPolisiMode = false) {
@@ -191,7 +201,7 @@ async function simpanAbsen(isPolisiMode = false) {
             window.antrianAbsenBolong.shift();
 
             if (window.antrianAbsenBolong.length > 0) {
-                // Mode Polisi: Pakai confirm karena harus lanjut ke antrian berikutnya
+                // Mode Polisi: Lanjut ke antrian berikutnya
                 IOSAlert.show("Berhasil", "Absen " + tglFull + " tersimpan. Lanjut...", {
                     onConfirm: () => {
                         if (typeof panggilModalAntrean === 'function') panggilModalAntrean();
@@ -200,17 +210,14 @@ async function simpanAbsen(isPolisiMode = false) {
             } else {
                 IOSAlert.show("Selesai", "Semua absen bolong sudah dilengkapi!", {
                     onConfirm: () => {
-                        document.getElementById('absenModal').style.display = 'none';
-                        if (typeof renderKalenderAbsen === 'function') renderKalenderAbsen();
+                        // Gunakan tutupMenuAbsen() agar popstate tertrigger dan membersihkan id 'modalAbsenInput'
+                        tutupMenuAbsen();
                     }
                 });
             }
         } else {
             // --- MODE TOAST (NORMAL) ---
-            // 1. Munculkan Toast (Hilang sendiri 2 detik)
             IOSAlert.show("Berhasil", "Absen berhasil disimpan!");
-            
-            // 2. Langsung tutup modal tanpa nunggu toast hilang
             tutupMenuAbsen();
         }
     } catch (e) {

@@ -1,4 +1,4 @@
-// rincian.js - Modul Laporan Rincian Jam Kerja (Firestore Parallel Architecture - Day Name Sync)
+// rincian.js - Modul Laporan Rincian Jam Kerja (Firestore Parallel Architecture - Strict ID Sync)
 
 window.bulanIndo = window.bulanIndo || ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
@@ -111,15 +111,12 @@ function bukaMenuRincian(event) {
     document.getElementById('areaHasilRincian').classList.remove('show');
     modal.style.display = 'flex';
     
-    // --- LOGIKA SMART BACK BUTTON (LEVELING SINKRON DENGAN MAIN.JS) ---
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 0;
-    const myLvl = baseLvl + 1; // Rincian adalah Level 1
-    history.pushState({ id: 'modalRincian', level: myLvl, rootModal: 'modalRincian' }, '', ''); 
+    // --- FIX LOGIKA TOMBOL BACK HP (STRICT ID SINKRON DENGAN MAIN.JS) ---
+    history.pushState({ id: 'modalRincian' }, '', ''); 
     
     window.handleBackRincian = function(e) {
-        const currentLvl = e.state ? (e.state.level || 0) : 0;
-        // Hanya tutup modal Rincian jika history mundur ke bawah level pondasinya
-        if (currentLvl < myLvl) {
+        // Hanya tutup modal rincian jika history benar-benar mundur ke dashboardRoot atau kosong
+        if (!e.state || e.state.id === 'dashboardRoot') {
             const m = document.getElementById('rincianModal');
             if (m) m.style.display = 'none';
             window.removeEventListener('popstate', window.handleBackRincian);
@@ -144,9 +141,7 @@ async function prosesRincian() {
     btn.innerText = "Mencari Data...";
     btn.disabled = true;
 
-    // Helper Parse Tanggal (SINKRON DENGAN FORMAT NAMA HARI)
     const parseIndo = (str) => {
-        // "Minggu, 26 April 2026" -> split(", ") -> ["Minggu", "26 April 2026"]
         const cleanStr = str.includes(', ') ? str.split(', ')[1] : str;
         const p = cleanStr.split(" ");
         return new Date(parseInt(p[2]), window.bulanIndo.indexOf(p[1]), parseInt(p[0]));
@@ -166,15 +161,14 @@ async function prosesRincian() {
         let tglLoop = new Date(dDari);
         const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
 
-        // --- STEP A: Kumpulkan Semua Request (SINKRON DENGAN PATH BARU) ---
         while (tglLoop <= dSampai) {
             const tglFullStr = tglLoop.toLocaleDateString('id-ID', opsi);
             const temp = tglFullStr.split(', ');
             const tglMurni = temp[1];
             const p = tglMurni.split(" ");
             
-            const blnTahunId = p[1] + "_" + p[2]; // April_2026
-            const dateId = tglFullStr.replace(', ', '_').replace(/\s/g, '_'); // Minggu_26_April_2026
+            const blnTahunId = p[1] + "_" + p[2];
+            const dateId = tglFullStr.replace(', ', '_').replace(/\s/g, '_'); 
 
             const prom = window.firestore
                 .collection('data').doc(uid)
@@ -202,7 +196,6 @@ async function prosesRincian() {
             }
         });
 
-        // --- STEP D: Kalkulasi Akhir ---
         const fs1Total = rekap.fs1.reflexy + rekap.fs1.massage;
         const fs2Total = rekap.fs2.reflexy + rekap.fs2.massage;
         const grandReflexy = rekap.fs1.reflexy + rekap.fs2.reflexy;
@@ -243,15 +236,13 @@ async function prosesRincian() {
     }
 }
 
+// FIX: Sinkronisasi Tombol Manual "Tutup" dengan history popstate
 function tutupMenuRincian() {
-    const modal = document.getElementById('rincianModal');
-    if (modal) {
-        modal.style.display = 'none';
-        
-        // Pastikan hanya mundur history jika tombol manual "Tutup" diklik
-        if (history.state && history.state.id === 'modalRincian') {
-            history.back(); 
-        }
+    if (history.state && history.state.id === 'modalRincian') {
+        history.back(); // Biarkan popstate handler yang menutup modalnya agar urutan sinkron
+    } else {
+        const modal = document.getElementById('rincianModal');
+        if (modal) modal.style.display = 'none';
         window.removeEventListener('popstate', window.handleBackRincian);
     }
 }

@@ -1,4 +1,4 @@
-// edit-data.js - Modul Edit & Hapus Data (Firestore Version - DAY NAME SYNC)
+// edit-data.js - Modul Edit & Hapus Data (Firestore Version - STRICT ID NAVIGATION)
 
 let currentEditId = null;
 let currentKategoriEdit = "Kerja";
@@ -76,14 +76,12 @@ function bukaMenuEdit(event) {
     pilihKategoriEdit('Kerja');
     modal.style.display = 'flex';
     
-    // --- LOGIKA SMART BACK BUTTON (LEVEL 1) ---
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 0;
-    const myLvl = baseLvl + 1;
-    history.pushState({ id: 'modalEditData', level: myLvl, rootModal: 'modalEditData' }, '', ''); 
+    // --- FIX LOGIKA TOMBOL BACK HP (STRICT ID SINKRON) ---
+    history.pushState({ id: 'modalEditData' }, '', ''); 
     
     window.handleBackEdit = function(e) {
-        const currentLvl = e.state ? (e.state.level || 0) : 0;
-        if (currentLvl < myLvl) {
+        // Hanya tutup modal Edit jika history mundur ke dashboardRoot atau kosong
+        if (!e.state || e.state.id === 'dashboardRoot') {
             const m = document.getElementById('editDataModal');
             if (m) m.style.display = 'none';
             window.removeEventListener('popstate', window.handleBackEdit);
@@ -250,14 +248,12 @@ function masukFormEdit(id, v1, v2, v3, ket) {
     }
     stackModal.style.display = 'flex';
     
-    // --- LOGIKA SMART BACK BUTTON (LEVEL 2) ---
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
-    const myLvl = baseLvl + 1;
-    history.pushState({ id: 'modalStackedEdit', level: myLvl }, '', ''); 
+    // --- FIX LOGIKA TOMBOL BACK HP (STRICT ID SINKRON) ---
+    history.pushState({ id: 'modalStackedEdit' }, '', ''); 
     
     window.handleBackStacked = function(e) {
-        const currentLvl = e.state ? (e.state.level || 0) : 0;
-        if (currentLvl < myLvl) {
+        // Jika mundur ke modal utama Edit Data (atau dashboardRoot)
+        if (!e.state || e.state.id === 'modalEditData' || e.state.id === 'dashboardRoot') {
             const s = document.getElementById('stackedEditPopup');
             if (s) s.style.display = 'none';
             window.removeEventListener('popstate', window.handleBackStacked);
@@ -279,7 +275,7 @@ function pilihGridStk(el, cat, val) {
 // Fungsi Tutup Popup Tambahan (Level 2)
 function tutupStackedEdit() {
     if (history.state && history.state.id === 'modalStackedEdit') {
-        history.back(); // Trigger popstate
+        history.back(); // Trigger popstate handler
     } else {
         const stack = document.getElementById('stackedEditPopup');
         if (stack) stack.style.display = 'none';
