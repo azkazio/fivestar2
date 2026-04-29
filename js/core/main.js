@@ -33,7 +33,7 @@ function formatKeTanggalLengkap(dateObj) {
 
 
 // ==========================================
-// 1. PREMIUM VISUAL KALENDER GLOBAL (LEVEL 1)
+// 1. PREMIUM VISUAL KALENDER GLOBAL (LEVEL 1) - ALIGNED WITH ABSEN
 // ==========================================
 function bukaKalenderVisual(inputId) {
     targetInputId = inputId;
@@ -54,26 +54,27 @@ function bukaKalenderVisual(inputId) {
         modal = document.createElement('div');
         modal.id = 'kalenderIosModal';
         modal.className = 'ios-overlay';
-        modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.4); z-index: 25000;
-            display: flex; justify-content: center; align-items: center;
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        `;
+        modal.style.zIndex = '30000';
         
         modal.innerHTML = `
-            <div class="ios-modal-form profile-expand-anim" style="width: 360px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
-                <div class="ios-modal-header" style="display: flex; justify-content: flex-start; align-items: center; padding: 18px; flex-shrink: 0;">
-                    <div onclick="bukaBulanTahunPickerGlobal()" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
-                        <h3 id="txtDisplayBulanTahunGlobal" style="margin:0; font-size:17px; font-weight: 700; color: var(--text-primary);">
-                            ${bulanIndo[currentDate.getMonth()]} ${currentDate.getFullYear()}
-                        </h3>
-                        <i class="fa-solid fa-chevron-down" style="font-size:10px; color: var(--text-primary);"></i>
+            <div id="kotakLengkungKalenderGlobal" class="ios-modal-form profile-expand-anim" style="width: 360px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+                
+                <div class="ios-modal-header" style="display: flex; flex-direction: column; align-items: center; padding: 15px 15px 10px 15px; flex-shrink: 0; border-bottom: none;">
+                    <h2 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: 1px;">PILIH TANGGAL</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <button onclick="ubahBulanGlobalHeader(-1)" style="background: transparent; border: none; color: #007AFF; font-size: 18px; cursor: pointer; padding: 5px 15px;"><i class="fa-solid fa-chevron-left"></i></button>
+                        
+                        <div onclick="bukaBulanTahunPickerGlobal()" style="cursor:pointer; display:flex; align-items:center; gap:8px; padding: 6px 12px; border-radius: 8px; background: rgba(142,142,147,0.1);">
+                            <span id="txtDisplayBulanTahunGlobal" style="font-size:15px; font-weight: 700; color: var(--text-primary);">Memuat...</span>
+                            <i class="fa-solid fa-caret-down" style="font-size:12px; color: var(--text-primary);"></i>
+                        </div>
+                        
+                        <button onclick="ubahBulanGlobalHeader(1)" style="background: transparent; border: none; color: #007AFF; font-size: 18px; cursor: pointer; padding: 5px 15px;"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
                 
                 <div class="ios-modal-body" style="padding: 10px; overflow-y: auto; flex-grow: 1;">
-                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 8px; border-bottom: 0.5px solid rgba(142,142,147,0.2); margin-bottom: 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 8px; border-bottom: 0.5px solid rgba(142,142,147,0.2); margin-bottom: 10px; position: sticky; top: 0; background: var(--card-bg); z-index: 5;">
                         <div style="color:#FF3B30; font-size:13px; font-weight:800;">MIN</div>
                         <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">SEN</div>
                         <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">SEL</div>
@@ -82,10 +83,10 @@ function bukaKalenderVisual(inputId) {
                         <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">JUM</div>
                         <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">SAB</div>
                     </div>
-                    <div id="gridBodyKalenderGlobal" class="grid-kalender-container" style="min-height: 330px; padding: 4px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 9px;"></div>
+                    <div id="gridBodyKalenderGlobal" class="grid-kalender-container" style="min-height: 310px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 0 13px 20px 13px; align-content: start;"></div>
                 </div>
 
-                <div class="ios-modal-footer" style="border-top: 0.5px solid rgba(142,142,147,0.2); flex-shrink: 0;">
+                <div class="ios-modal-footer" style="border-top: 0.5px solid rgba(142,142,147,0.2); flex-shrink: 0; padding: 0;">
                     <button class="btn-batal" onclick="tutupKalenderVisual()" style="width: 100%; border: none; font-weight: 700; color: #007AFF !important; padding: 16px; text-align: center; background: transparent; font-size: 17px; cursor: pointer;">Batal</button>
                 </div>
             </div>
@@ -96,21 +97,22 @@ function bukaKalenderVisual(inputId) {
     renderKalenderVisual();
     modal.style.display = 'flex';
 
-    // --- STEP NAVIGATION LOGIC (LEVEL) ---
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
-    const myLvl = baseLvl + 1;
-    history.pushState({ id: 'kalenderVisual', level: myLvl }, '', '');
+    history.pushState({ id: 'modalKalenderVisualGlobal' }, '', '');
 
     window.handleBackKalenderVisual = function(e) {
-        const currentLvl = e.state ? (e.state.level || 0) : 0;
-        // Jika kedalaman berkurang (user memencet back), tutup modal ini
-        if (currentLvl < myLvl) {
+        if (!e.state || (e.state.id !== 'modalKalenderVisualGlobal' && e.state.id !== 'pickerMYGlobal' && e.state.id !== 'pickerYearOnlyGlobal')) {
             const m = document.getElementById('kalenderIosModal');
             if (m) m.style.display = 'none';
             window.removeEventListener('popstate', window.handleBackKalenderVisual);
         }
     };
+    window.removeEventListener('popstate', window.handleBackKalenderVisual);
     window.addEventListener('popstate', window.handleBackKalenderVisual);
+}
+
+function ubahBulanGlobalHeader(offset) {
+    currentDate.setMonth(currentDate.getMonth() + offset);
+    renderKalenderVisual();
 }
 
 function renderKalenderVisual() {
@@ -123,16 +125,20 @@ function renderKalenderVisual() {
     display.innerText = bulanIndo[bln] + " " + thn;
     grid.innerHTML = '';
 
-    const firstDay = new Date(thn, bln, 1).getDay();
+    const firstDay = new Date(thn, bln, 1).getDay(); // 0 = Minggu
     const daysInMonth = new Date(thn, bln + 1, 0).getDate();
 
     let targetVal = document.getElementById(targetInputId)?.value || "";
     const todayStr = getTanggalHariIni(); 
 
-    for (let i = 0; i < firstDay; i++) {
-        grid.innerHTML += `<div style="width:38px;"></div>`;
+    // 1. FILLER BULAN SEBELUMNYA
+    const prevMonthDays = new Date(thn, bln, 0).getDate(); 
+    for (let i = 0; i < firstDay; i++) { 
+        const prevDayNum = prevMonthDays - (firstDay - 1) + i;
+        grid.innerHTML += `<div class="tgl-item-global disabled-day" style="color: var(--text-primary);">${prevDayNum}</div>`; 
     }
 
+    // 2. TANGGAL BULAN INI
     for (let d = 1; d <= daysInMonth; d++) {
         const tempDate = new Date(thn, bln, d);
         const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
@@ -143,9 +149,21 @@ function renderKalenderVisual() {
         if (dayOfWeek === 0) classes += " minggu"; 
         
         if (tglFullStr === todayStr) classes += " today"; 
-        if (tglFullStr === targetVal) classes += " selected"; 
+        
+        let customStyle = "color: var(--text-primary);";
+        if (tglFullStr === targetVal) {
+            // Style jika tanggal terpilih
+            customStyle = `background-color: #007AFF; color: white;`;
+        }
 
-        grid.innerHTML += `<div class="${classes}" onclick="pilihTanggal(${d}, ${bln}, ${thn})">${d}</div>`;
+        grid.innerHTML += `<div class="${classes}" style="${customStyle}" onclick="pilihTanggal(${d}, ${bln}, ${thn})">${d}</div>`;
+    }
+
+    // 3. FILLER BULAN DEPAN
+    const totalCellsSoFar = firstDay + daysInMonth;
+    const remainingCells = (7 - (totalCellsSoFar % 7)) % 7;
+    for (let i = 1; i <= remainingCells; i++) {
+        grid.innerHTML += `<div class="tgl-item-global disabled-day" style="color: var(--text-primary);">${i}</div>`; 
     }
 }
 
@@ -162,7 +180,7 @@ function pilihTanggal(d, bln, thn) {
 }
 
 function tutupKalenderVisual() {
-    if (history.state && history.state.id === 'kalenderVisual') {
+    if (history.state && history.state.id === 'modalKalenderVisualGlobal') {
         history.back(); // Memicu popstate dengan rapi
     } else {
         const m = document.getElementById('kalenderIosModal');
@@ -170,6 +188,7 @@ function tutupKalenderVisual() {
         window.removeEventListener('popstate', window.handleBackKalenderVisual);
     }
 }
+
 
 
 // ==========================================
@@ -181,7 +200,7 @@ function bukaBulanTahunPickerGlobal() {
         picker = document.createElement('div');
         picker.id = 'pickerMYGlobal';
         picker.className = 'ios-overlay';
-        picker.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 26000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);`;
+        picker.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 31000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);`;
         document.body.appendChild(picker);
     }
     renderPickerMYGlobalInner(true);
@@ -262,7 +281,7 @@ function bukaYearPickerGlobal() {
         yrPicker = document.createElement('div');
         yrPicker.id = 'pickerYearOnlyGlobal';
         yrPicker.className = 'ios-overlay';
-        yrPicker.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 27000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);`;
+        yrPicker.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 32000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);`;
         document.body.appendChild(yrPicker);
     }
     renderYearPickerGlobalInner(true);
@@ -498,17 +517,28 @@ const IOSAlert = {
 };
 
 function muatDataHeader() {
-    const usernameRaw = localStorage.getItem('username') || "user";
-    const namaRaw = localStorage.getItem('nama_user') || usernameRaw;
-    const fotoTersimpan = localStorage.getItem('user_foto_base64') || window.avatarSiluet;
-
     const elNama = document.getElementById('displayNamaLengkap');
     const elUser = document.getElementById('displayUsername');
-    const elFotos = document.querySelectorAll('.profile-pic');
+    if (!elNama && !elUser) return;
 
-    if (elNama) elNama.innerText = namaRaw.toUpperCase();
-    if (elUser) elUser.innerText = "@" + usernameRaw.toLowerCase();
-    elFotos.forEach(img => img.src = fotoTersimpan);
+    firebase.auth().onAuthStateChanged((user) => {
+        if (!user) return;
+
+        // Dengarkan perubahan data user di Firebase Realtime Database
+        const userRef = window.db.ref(user.uid);
+        userRef.on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            const nama = data.nama || 'User';
+            const username = data.username || 'username';
+
+            if (elNama) elNama.innerText = nama.toUpperCase();
+            if (elUser) elUser.innerText = '@' + username.toLowerCase();
+
+            // Update localStorage agar fallback saat reload
+            localStorage.setItem('nama_user', nama);
+            localStorage.setItem('username', username);
+        });
+    });
 }
 
 function updateWaktu() {
