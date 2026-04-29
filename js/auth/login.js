@@ -62,11 +62,34 @@ function inisialisasiLogin() {
     
     loginOverlay.style.display = 'flex';
     
-    // Set Base Navigasi agar tidak bisa ditutup sembarangan lewat back (karena ini halaman root index)
-    history.replaceState({ id: 'loginRoot', level: 0 }, '', '');
+    // --- NAVIGASI BACK UNTUK KELUAR APLIKASI (FIXED LOGIC) ---
+    history.pushState({ id: 'loginPage' }, '', '');
+    
+    // Gunakan fungsi bernama untuk mencegah listener tertumpuk
+    window.removeEventListener('popstate', handleBackLoginPage);
+    window.addEventListener('popstate', handleBackLoginPage);
 }
 
-// --- 1. FUNGSI LUPA PASSWORD (DENGAN POPUP KHUSUS & NAVIGASI LEVEL) ---
+function handleBackLoginPage(e) {
+    // Mengecek apakah ada modal lapis kedua (seperti lupa password/register) yang terbuka
+    const adaModalKedua = (
+        (document.getElementById('lupaPassOverlay') && document.getElementById('lupaPassOverlay').style.display === 'flex') ||
+        (document.getElementById('registerOverlay') && document.getElementById('registerOverlay').style.display === 'flex')
+    );
+
+    // Jika history mundur ke bawah loginPage DAN tidak ada modal lain yang terbuka, barulah kita keluar aplikasi
+    if (!e.state || e.state.id !== 'loginPage') {
+        if (!adaModalKedua) {
+            if (navigator.app) {
+                navigator.app.exitApp();
+            } else {
+                window.location.replace('about:blank'); 
+            }
+        }
+    }
+}
+
+// --- 1. FUNGSI LUPA PASSWORD (DENGAN POPUP KHUSUS & NAVIGASI STRICT ID) ---
 
 function bukaPopupLupaPassword() {
     let overlay = document.getElementById('lupaPassOverlay');
@@ -104,25 +127,25 @@ function bukaPopupLupaPassword() {
     document.getElementById('emailResetLupa').value = "";
     overlay.style.display = 'flex';
 
-    // --- STEP NAVIGATION LOGIC (LUPA PASSWORD) ---
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 0;
-    const myLvl = baseLvl + 1;
-    history.pushState({ id: 'lupaPassModal', level: myLvl }, '', '');
+    // --- LOGIKA SMART BACK BUTTON (STRICT ID) ---
+    history.pushState({ id: 'lupaPassModal' }, '', '');
 
     window.handleBackLupaPass = function(e) {
-        const currentLvl = e.state ? (e.state.level || 0) : 0;
-        if (currentLvl < myLvl) {
+        // Tutup jika kembali ke state loginPage atau kosong
+        if (!e.state || e.state.id === 'loginPage') {
             const m = document.getElementById('lupaPassOverlay');
             if (m) m.style.display = 'none';
             window.removeEventListener('popstate', window.handleBackLupaPass);
         }
     };
+    window.removeEventListener('popstate', window.handleBackLupaPass);
     window.addEventListener('popstate', window.handleBackLupaPass);
 }
 
 function tutupPopupLupaPassword() {
+    // Sinkronisasi tombol Batal dengan history back
     if (history.state && history.state.id === 'lupaPassModal') {
-        history.back(); // Trigger popstate
+        history.back(); 
     } else {
         const m = document.getElementById('lupaPassOverlay');
         if (m) m.style.display = 'none';
@@ -185,7 +208,6 @@ async function sinkronisasiDataUser(uid) {
     } catch (e) { console.error("Gagal Sinkronisasi:", e); return false; }
 }
 
-// 3. PROSES LOGIN MANUAL (SUPPORT EMAIL & USERNAME)
 async function prosesLogin() {
     const inputIdentifier = document.getElementById('loginUser').value.trim().toLowerCase();
     const passInput = document.getElementById('loginPass').value;
@@ -202,23 +224,19 @@ async function prosesLogin() {
     let loginEmail = inputIdentifier;
 
     try {
-        // --- JIKA INPUT ADALAH USERNAME ---
         if (!isEmail) {
-            // Cari data di Database Firebase dengan username terkait
             const snap = await window.db.ref().orderByChild('username').equalTo(inputIdentifier).once('value');
             
             if (!snap.exists()) {
-                // Username tidak ditemukan di database
                 btnLogin.innerText = "Masuk";
                 btnLogin.disabled = false;
                 return IOSAlert.show("Gagal Masuk", "Username tidak terdaftar.", { teksTombol: "Coba Lagi" });
             }
             
-            // Ambil email dari data username yang ditemukan
             snap.forEach(child => {
                 loginEmail = child.val().email;
             });
-            
+
             if (!loginEmail) {
                 btnLogin.innerText = "Masuk";
                 btnLogin.disabled = false;
@@ -226,19 +244,27 @@ async function prosesLogin() {
             }
         }
 
-        // --- PROSES LOGIN FIREBASE (Menggunakan Email) ---
         const result = await firebase.auth().signInWithEmailAndPassword(loginEmail, passInput);
         const uid = result.user.uid;
 
-        // Tarik data profil berdasarkan UID
+        // ===========================
+        // CEK AKUN SEBELUM HAPUS FOTO
+        // ===========================
+        const lastUid = localStorage.getItem('last_uid');
+        if (lastUid !== uid) {
+            // akun berbeda → hapus foto lama
+            localStorage.removeItem('user_foto_base64');
+        }
+
         await sinkronisasiDataUser(uid);
-        
+
+        // simpan UID sekarang
+        localStorage.setItem('last_uid', uid);
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('loginType', 'manual');
         window.location.href = 'dashboard.html';
         
     } catch (error) {
-        // --- CUSTOM ERROR MESSAGES ---
         let msg = "Terjadi kesalahan.";
         
         if (error.code === 'auth/user-not-found') {
@@ -267,11 +293,15 @@ function loginPihakKetiga(p) {
         const u = res.user;
         const uid = u.uid;
 
-        // Cek apakah user sudah punya data di Database (UID Root)
+        // cek foto lama hanya jika akun berbeda
+        const lastUid = localStorage.getItem('last_uid');
+        if (lastUid !== uid) {
+            localStorage.removeItem('user_foto_base64');
+        }
+
         const snapshot = await window.db.ref(uid).once('value');
         
         if (!snapshot.exists()) {
-            // Buat profil dasar jika user baru
             const defaultUser = u.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
             await window.db.ref(uid).set({
                 uid: uid,
@@ -285,6 +315,8 @@ function loginPihakKetiga(p) {
         }
 
         await sinkronisasiDataUser(uid);
+
+        localStorage.setItem('last_uid', uid);
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('loginType', 'google');
         window.location.href = 'dashboard.html';

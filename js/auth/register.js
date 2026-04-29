@@ -54,7 +54,7 @@ function inisialisasiRegister() {
                         <div style="display: flex; align-items: center; font-size: 13px; color: #8E8E93;" id="reqMatch"><i class="fa-regular fa-circle" style="margin-right: 8px;"></i> Kata sandi cocok</div>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button onclick="history.back()" style="${btnSecondaryStyle} flex: 1;">Kembali</button>
+                        <button onclick="mundurStepManual()" style="${btnSecondaryStyle} flex: 1;">Kembali</button>
                         <button onclick="lanjutStep(3, this)" style="${btnPrimaryStyle} flex: 1;">Lanjut</button>
                     </div>
                 </div>
@@ -73,7 +73,7 @@ function inisialisasiRegister() {
                     <div class="input-group" style="margin-bottom: 18px;"><input type="tel" id="regHp" placeholder="Nomor HP / WhatsApp" class="custom-box-input" style="${inputStyle}"></div>
                     <div class="input-group" style="margin-bottom: 25px;"><textarea id="regAlamat" placeholder="Alamat Lengkap" class="custom-box-input" rows="2" style="${inputStyle} resize: none;"></textarea></div>
                     <div style="display: flex; gap: 10px;">
-                        <button onclick="history.back()" style="${btnSecondaryStyle} flex: 1;">Kembali</button>
+                        <button onclick="mundurStepManual()" style="${btnSecondaryStyle} flex: 1;">Kembali</button>
                         <button id="btnFinishReg" onclick="prosesDaftar()" style="${btnPrimaryStyle} background: #34C759; flex: 1;">Daftar</button>
                     </div>
                 </div>
@@ -101,46 +101,43 @@ function inisialisasiRegister() {
     regOverlay.style.display = 'flex';
     transisiUIRegister(1);
 
-    // --- STEP NAVIGATION LOGIC ---
-    // Push State awal sebagai Step 1
+    // --- STEP NAVIGATION LOGIC (SYNCED WITH SYSTEM BACK) ---
     history.pushState({ id: 'registerStep', step: 1 }, '', '');
 
-    window.handleBackRegister = function(e) {
-        const state = e.state;
-        
-        // 1. Kapan Modal Register TUTUP?
-        // Hanya jika kita menekan Back sampai kembali ke riwayat 'loginRoot' (atau kosong)
-        if (!state || state.id === 'loginRoot') {
-            const m = document.getElementById('registerOverlay');
-            if (m) m.style.display = 'none';
-            window.removeEventListener('popstate', window.handleBackRegister);
-            
-            // Panggil kembali login agar layar tidak kosong
-            if (typeof inisialisasiLogin === 'function') inisialisasiLogin();
-            return;
-        }
+    window.removeEventListener('popstate', handleBackRegisterPopstate);
+    window.addEventListener('popstate', handleBackRegisterPopstate);
+}
 
-        // 2. Kapan Register MUNDUR STEP?
-        // Jika histori yang muncul adalah bagian dari 'registerStep'
-        if (state && state.id === 'registerStep') {
-            transisiUIRegister(state.step);
-        }
+function handleBackRegisterPopstate(e) {
+    const state = e.state;
+    
+    // 1. Jika mundur sampai ke 'loginPage' atau kosong
+    if (!state || state.id === 'loginPage') {
+        const m = document.getElementById('registerOverlay');
+        if (m) m.style.display = 'none';
         
-        // 3. Jika state adalah milik 'kalenderVisual', kita diam saja, 
-        // sehingga form tidak goyah dan tertutup.
-    };
-    window.addEventListener('popstate', window.handleBackRegister);
+        // Panggil kembali form login agar layar tidak blank
+        if (typeof inisialisasiLogin === 'function') inisialisasiLogin();
+        return;
+    }
+
+    // 2. Jika sistem HP memundurkan state register, transisikan tampilannya
+    if (state && state.id === 'registerStep') {
+        transisiUIRegister(state.step);
+    }
+}
+
+function mundurStepManual() {
+    // Tombol manual cukup memanggil history.back(), biarkan popstate yang mengatur tampilannya
+    history.back();
 }
 
 function kembaliKeLogin() {
-    if (history.state && history.state.id === 'registerStep') {
-        // Melompat mundur history sebanyak langkah yang sudah terbuka (agar kembali ke loginRoot)
-        history.go(-currentRegStep); 
-    } else {
-        document.getElementById('registerOverlay').style.display = 'none';
-        window.removeEventListener('popstate', window.handleBackRegister);
-        if (typeof inisialisasiLogin === 'function') inisialisasiLogin();
-    }
+    // Karena kita tidak tahu sudah berapa kali menekan 'Lanjut', 
+    // kita membuang overlay register dan langsung memanggil form login.
+    // Navigasi sistem akan merapikan jejaknya di background.
+    document.getElementById('registerOverlay').style.display = 'none';
+    if (typeof inisialisasiLogin === 'function') inisialisasiLogin();
 }
 
 // LOGIKA VALIDASI PASSWORD
